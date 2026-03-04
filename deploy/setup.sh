@@ -27,8 +27,10 @@ else
 fi
 
 # 3. Pull images and start
-docker compose pull
-docker compose up -d
+COMPOSE="docker compose"
+command -v docker &>/dev/null || COMPOSE="podman-compose"
+$COMPOSE pull
+$COMPOSE up -d
 echo "Containers started"
 
 # 4. Nginx vhost
