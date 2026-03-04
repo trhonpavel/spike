@@ -28,6 +28,114 @@ export async function login(password: string): Promise<string> {
   return data.token
 }
 
+// --- WebAuthn helpers ---
+
+function bufferToBase64url(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  let str = ''
+  for (const b of bytes) str += String.fromCharCode(b)
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+export async function webauthnStatus(): Promise<boolean> {
+  const res = await fetch('/api/auth/webauthn/status')
+  if (!res.ok) return false
+  const data = await res.json()
+  return data.enabled
+}
+
+export async function webauthnRegister(): Promise<void> {
+  // Get registration options (requires auth token)
+  const optRes = await fetch('/api/auth/webauthn/register/options', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${getSessionToken()}` },
+  })
+  if (!optRes.ok) throw new Error('Failed to get registration options')
+  const options = await optRes.json()
+
+  // Decode base64url fields for the browser API
+  options.challenge = Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+  options.user.id = Uint8Array.from(atob(options.user.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+  if (options.excludeCredentials) {
+    for (const c of options.excludeCredentials) {
+      c.id = Uint8Array.from(atob(c.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+    }
+  }
+
+  // Call browser WebAuthn API (triggers Face ID / Touch ID / biometric)
+  const credential = await navigator.credentials.create({ publicKey: options }) as PublicKeyCredential
+  if (!credential) throw new Error('Registration cancelled')
+
+  const attestation = credential.response as AuthenticatorAttestationResponse
+  const body = JSON.stringify({
+    id: credential.id,
+    rawId: bufferToBase64url(credential.rawId),
+    type: credential.type,
+    response: {
+      attestationObject: bufferToBase64url(attestation.attestationObject),
+      clientDataJSON: bufferToBase64url(attestation.clientDataJSON),
+    },
+  })
+
+  const verifyRes = await fetch('/api/auth/webauthn/register/verify', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getSessionToken()}`,
+    },
+    body,
+  })
+  if (!verifyRes.ok) {
+    const err = await verifyRes.json().catch(() => ({}))
+    throw new Error(err.detail || 'Registration failed')
+  }
+}
+
+export async function webauthnLogin(): Promise<string> {
+  // Get authentication options
+  const optRes = await fetch('/api/auth/webauthn/login/options', { method: 'POST' })
+  if (!optRes.ok) throw new Error('Failed to get login options')
+  const options = await optRes.json()
+
+  // Decode base64url fields
+  options.challenge = Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+  if (options.allowCredentials) {
+    for (const c of options.allowCredentials) {
+      c.id = Uint8Array.from(atob(c.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+    }
+  }
+
+  // Call browser WebAuthn API (triggers Face ID / Touch ID / biometric)
+  const credential = await navigator.credentials.get({ publicKey: options }) as PublicKeyCredential
+  if (!credential) throw new Error('Authentication cancelled')
+
+  const assertion = credential.response as AuthenticatorAssertionResponse
+  const body = JSON.stringify({
+    id: credential.id,
+    rawId: bufferToBase64url(credential.rawId),
+    type: credential.type,
+    response: {
+      authenticatorData: bufferToBase64url(assertion.authenticatorData),
+      clientDataJSON: bufferToBase64url(assertion.clientDataJSON),
+      signature: bufferToBase64url(assertion.signature),
+      userHandle: assertion.userHandle ? bufferToBase64url(assertion.userHandle) : null,
+    },
+  })
+
+  const verifyRes = await fetch('/api/auth/webauthn/login/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  })
+  if (!verifyRes.ok) {
+    const err = await verifyRes.json().catch(() => ({}))
+    throw new Error(err.detail || 'Authentication failed')
+  }
+  const data = await verifyRes.json()
+  setSessionToken(data.token)
+  return data.token
+}
+
 function headers(adminToken?: string | null): HeadersInit {
   const h: HeadersInit = { 'Content-Type': 'application/json' }
   if (adminToken) h['X-Admin-Token'] = adminToken
