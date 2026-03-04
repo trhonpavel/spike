@@ -1,0 +1,49 @@
+import { useEffect, useRef, useCallback } from 'react'
+
+export function useLiveUpdates(slug: string, onEvent: (event: string) => void) {
+  const onEventRef = useRef(onEvent)
+  onEventRef.current = onEvent
+
+  const connect = useCallback(() => {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const ws = new WebSocket(`${proto}//${location.host}/ws/${slug}`)
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data)
+        onEventRef.current(msg.event)
+      } catch { /* malformed message */ }
+    }
+
+    ws.onerror = () => {
+      ws.close()
+    }
+
+    return ws
+  }, [slug])
+
+  useEffect(() => {
+    let ws = connect()
+    let retryTimeout: ReturnType<typeof setTimeout>
+    let retries = 0
+
+    ws.onclose = scheduleReconnect
+
+    function scheduleReconnect() {
+      if (retries >= 10) return
+      const delay = Math.min(1000 * 2 ** retries, 30000)
+      retries++
+      retryTimeout = setTimeout(() => {
+        ws = connect()
+        ws.onopen = () => { retries = 0 }
+        ws.onclose = scheduleReconnect
+      }, delay)
+    }
+
+    return () => {
+      clearTimeout(retryTimeout)
+      retries = 10 // prevent reconnect during cleanup
+      ws.close()
+    }
+  }, [connect])
+}

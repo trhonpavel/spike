@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: spike
+      POSTGRES_USER: spike
+      POSTGRES_PASSWORD: spike_secret
+    network_mode: host
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spike -h 127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://spike:spike_secret@127.0.0.1:5432/spike
+    network_mode: host
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    network_mode: host
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
