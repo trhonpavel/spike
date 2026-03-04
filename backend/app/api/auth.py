@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -134,7 +135,10 @@ async def webauthn_register_options(
 
     _store_challenge(options.challenge)
 
-    return webauthn.options_to_json(options)
+    return Response(
+        content=webauthn.options_to_json(options),
+        media_type="application/json",
+    )
 
 
 @router.post("/webauthn/register/verify")
@@ -196,7 +200,10 @@ async def webauthn_login_options(db: AsyncSession = Depends(get_db)):
 
     _store_challenge(options.challenge)
 
-    return webauthn.options_to_json(options)
+    return Response(
+        content=webauthn.options_to_json(options),
+        media_type="application/json",
+    )
 
 
 @router.post("/webauthn/login/verify", response_model=LoginResponse)
