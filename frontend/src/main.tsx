@@ -6,6 +6,7 @@ import './index.css'
 import HomePage from './pages/HomePage'
 import TournamentPage from './pages/TournamentPage'
 import StandingsPage from './pages/StandingsPage'
+import PasswordGate from './components/PasswordGate'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,13 +20,15 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/t/:slug" element={<TournamentPage />} />
-          <Route path="/t/:slug/standings" element={<StandingsPage />} />
-        </Routes>
-      </BrowserRouter>
+      <PasswordGate>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/t/:slug" element={<TournamentPage />} />
+            <Route path="/t/:slug/standings" element={<StandingsPage />} />
+          </Routes>
+        </BrowserRouter>
+      </PasswordGate>
     </QueryClientProvider>
   </StrictMode>,
 )

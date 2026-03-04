@@ -1,8 +1,38 @@
 const BASE = '/api/v1/tournaments'
+const SESSION_KEY = 'spike_session'
+
+export function getSessionToken(): string {
+  return localStorage.getItem(SESSION_KEY) || ''
+}
+
+export function setSessionToken(token: string) {
+  localStorage.setItem(SESSION_KEY, token)
+}
+
+export function clearSessionToken() {
+  localStorage.removeItem(SESSION_KEY)
+}
+
+export async function login(password: string): Promise<string> {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.detail || 'Login failed')
+  }
+  const data = await res.json()
+  setSessionToken(data.token)
+  return data.token
+}
 
 function headers(adminToken?: string | null): HeadersInit {
   const h: HeadersInit = { 'Content-Type': 'application/json' }
   if (adminToken) h['X-Admin-Token'] = adminToken
+  const session = getSessionToken()
+  if (session) h['Authorization'] = `Bearer ${session}`
   return h
 }
 

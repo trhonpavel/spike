@@ -1,5 +1,8 @@
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+
+from app.config import settings
+from app.api.auth import validate_token
 
 router = APIRouter()
 
@@ -29,7 +32,15 @@ manager = ConnectionManager()
 
 
 @router.websocket("/ws/{slug}")
-async def websocket_endpoint(websocket: WebSocket, slug: str):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    slug: str,
+    token: str = Query(default=""),
+):
+    if settings.app_password and not validate_token(token):
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
+
     await manager.connect(slug, websocket)
     try:
         while True:

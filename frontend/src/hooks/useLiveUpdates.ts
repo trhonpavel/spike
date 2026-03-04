@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
+import { getSessionToken } from '../api/client'
 
 export function useLiveUpdates(slug: string, onEvent: (event: string) => void) {
   const onEventRef = useRef(onEvent)
@@ -6,7 +7,9 @@ export function useLiveUpdates(slug: string, onEvent: (event: string) => void) {
 
   const connect = useCallback(() => {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const ws = new WebSocket(`${proto}//${location.host}/ws/${slug}`)
+    const token = getSessionToken()
+    const qs = token ? `?token=${encodeURIComponent(token)}` : ''
+    const ws = new WebSocket(`${proto}//${location.host}/ws/${slug}${qs}`)
 
     ws.onmessage = (e) => {
       try {

@@ -1,12 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
 
 from app.config import settings
 from app.database import engine, Base
 from app.api.tournaments import router as tournaments_router
 from app.api.websocket import router as ws_router
+from app.api.auth import router as auth_router, validate_token
 
 
 @asynccontextmanager
@@ -25,6 +27,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    if not settings.app_password:
+        return await call_next(request)
+
+    path = request.url.path
+    if path == "/api/health" or path.startswith("/api/auth/"):
+        return await call_next(request)
+
+    if not path.startswith("/api/"):
+        return await call_next(request)
+
+    auth = request.headers.get("authorization", "")
+    if auth.startswith("Bearer "):
+        token = auth[7:]
+        if validate_token(token):
+            return await call_next(request)
+
+    return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+
+
+app.include_router(auth_router)
 app.include_router(tournaments_router)
 app.include_router(ws_router)
 
