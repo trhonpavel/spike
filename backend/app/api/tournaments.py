@@ -15,6 +15,7 @@ from app.schemas.tournament import (
     RoundOut, GroupOut, MatchOut,
     ScoreUpdate, StandingOut,
 )
+from app.config import settings
 from app.services.draw import perform_draw
 from app.services.scoring import update_match_score, finalize_round
 from app.api.websocket import manager
@@ -41,6 +42,8 @@ async def _get_tournament(db: AsyncSession, slug: str) -> Tournament:
 
 
 def _verify_admin(tournament: Tournament, token: str | None):
+    if settings.app_password:
+        return  # whole app is password-protected, everyone is admin
     if not token or token != tournament.admin_token:
         raise HTTPException(403, "Invalid admin token")
 

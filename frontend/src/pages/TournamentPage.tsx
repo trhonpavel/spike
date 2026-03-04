@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
 import { getAdminToken, isAdmin } from '../hooks/useAdminToken'
+import { getSessionToken } from '../api/client'
 import { useLiveUpdates } from '../hooks/useLiveUpdates'
 import PlayersTab from '../components/PlayersTab'
 import RoundsTab from '../components/RoundsTab'
@@ -15,7 +16,8 @@ export default function TournamentPage() {
   const [tab, setTab] = useState<Tab>('players')
   const [copied, setCopied] = useState(false)
   const queryClient = useQueryClient()
-  const admin = slug ? isAdmin(slug) : false
+  const appAuth = !!getSessionToken()
+  const admin = appAuth || (slug ? isAdmin(slug) : false)
   const token = slug ? getAdminToken(slug) : null
 
   const { data: tournament } = useQuery({
