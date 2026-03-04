@@ -14,6 +14,7 @@ services:
       retries: 5
 
   api:
+    image: ghcr.io/trhonpavel/spike/api:latest
     build: ./backend
     environment:
       DATABASE_URL: ${DATABASE_URL}
@@ -28,6 +29,7 @@ services:
       retries: 3
 
   web:
+    image: ghcr.io/trhonpavel/spike/web:latest
     build:
       context: .
       dockerfile: nginx/Dockerfile
