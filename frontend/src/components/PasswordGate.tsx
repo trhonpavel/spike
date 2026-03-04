@@ -81,6 +81,15 @@ export default function PasswordGate({ children }: { children: ReactNode }) {
             Enter Password
           </h2>
           <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Hidden username so browsers recognize this as a login form */}
+            <input
+              type="text"
+              autoComplete="username"
+              value="spike"
+              readOnly
+              className="hidden"
+              tabIndex={-1}
+            />
             <input
               type="password"
               value={password}
