@@ -86,6 +86,12 @@ export interface Standing {
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  const session = getSessionToken()
+  if (session) {
+    const h = new Headers(init?.headers)
+    if (!h.has('Authorization')) h.set('Authorization', `Bearer ${session}`)
+    init = { ...init, headers: h }
+  }
   const res = await fetch(url, init)
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
