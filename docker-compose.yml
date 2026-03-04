@@ -1,6 +1,12 @@
+networks:
+  spike:
+    driver: bridge
+
 services:
   db:
     image: postgres:16-alpine
+    networks:
+      - spike
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -16,6 +22,8 @@ services:
   api:
     image: ghcr.io/trhonpavel/spike/api:latest
     build: ./backend
+    networks:
+      - spike
     environment:
       DATABASE_URL: ${DATABASE_URL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
@@ -33,6 +41,8 @@ services:
     build:
       context: .
       dockerfile: nginx/Dockerfile
+    networks:
+      - spike
     ports:
       - "127.0.0.1:3001:80"
     depends_on:
