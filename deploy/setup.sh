@@ -18,7 +18,6 @@ if [ ! -f .env ]; then
 POSTGRES_DB=spike
 POSTGRES_USER=spike
 POSTGRES_PASSWORD=${PASS}
-DATABASE_URL=postgresql+asyncpg://spike:${PASS}@db:5432/spike
 ALLOWED_ORIGINS=https://spike.trhon.net
 EOF
     echo "Created .env with generated password"
@@ -26,20 +25,27 @@ else
     echo ".env already exists, skipping"
 fi
 
-# 3. Pull images and start
+# 3. Pick compose tool and file
 COMPOSE="docker compose"
-command -v docker &>/dev/null || COMPOSE="podman-compose"
+COMPOSE_FILE="docker-compose.yml"
+if ! command -v docker &>/dev/null; then
+    COMPOSE="podman-compose"
+    COMPOSE_FILE="docker-compose.prod.yml"
+fi
+export COMPOSE_FILE
+
+# 4. Pull images and start
 $COMPOSE pull
 $COMPOSE up -d
 echo "Containers started"
 
-# 4. Nginx vhost
+# 5. Nginx vhost
 cp deploy/spike.nginx.conf /etc/nginx/sites-available/spike.conf
 ln -sf /etc/nginx/sites-available/spike.conf /etc/nginx/sites-enabled/spike.conf
 nginx -t && systemctl reload nginx
 echo "Nginx configured"
 
-# 5. SSL
+# 6. SSL
 echo "Setting up SSL..."
 certbot --nginx -d spike.trhon.net --non-interactive --agree-tos --email pavel@trhon.net
 echo ""
