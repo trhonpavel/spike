@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
-import type { RoundData, Standing } from '../api/client'
+import type { Player, RoundData, Standing } from '../api/client'
+import PlayerDetailModal from './PlayerDetailModal'
 
 interface Props {
   slug: string
@@ -11,6 +13,7 @@ interface Props {
 
 export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) {
   const queryClient = useQueryClient()
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
 
   const { data: players = [] } = useQuery({
     queryKey: ['players', slug],
@@ -226,7 +229,8 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
             {standings.slice(0, 5).map((s: Standing) => (
               <div
                 key={s.player.id}
-                className="flex items-center px-4 py-2.5 border-b border-border/50 last:border-b-0"
+                onClick={() => setSelectedPlayer(s.player)}
+                className="flex items-center px-4 py-2.5 border-b border-border/50 last:border-b-0 cursor-pointer transition-colors active:bg-surface-4/50 hover:bg-surface-3/50"
               >
                 <span className={`font-display text-base font-black w-10 shrink-0 ${
                   s.rank === 1 ? 'rank-1' :
@@ -250,6 +254,14 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
             View Full Standings
           </button>
         </div>
+      )}
+
+      {selectedPlayer && (
+        <PlayerDetailModal
+          player={selectedPlayer}
+          slug={slug}
+          onClose={() => setSelectedPlayer(null)}
+        />
       )}
     </div>
   )

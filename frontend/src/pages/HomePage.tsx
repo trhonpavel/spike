@@ -35,7 +35,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex flex-col relative overflow-hidden"
+         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       {/* Background glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[600px] h-[600px] bg-brand/6 rounded-full blur-[150px] pointer-events-none" />
 

@@ -61,11 +61,12 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
   const ballRate = player.balls_total > 0 ? Math.round((player.balls_won / player.balls_total) * 100) : 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/80 anim-fade" />
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="fixed inset-0 bg-black/80 anim-fade" onClick={onClose} />
       <div
-        className="relative w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl max-h-[88vh] overflow-y-auto anim-sheet sm:anim-scale"
-        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl max-h-[88vh] overflow-y-auto overscroll-contain anim-sheet sm:anim-scale"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+        onTouchMove={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">

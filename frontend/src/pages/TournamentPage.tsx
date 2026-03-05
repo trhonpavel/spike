@@ -74,7 +74,8 @@ export default function TournamentPage() {
   return (
     <div className="min-h-screen pb-24 sm:pb-0">
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-border"
+              style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <Link to="/" className="font-display text-xl font-black text-brand uppercase tracking-tight shrink-0 cursor-pointer">

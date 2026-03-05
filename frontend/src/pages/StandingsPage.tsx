@@ -25,7 +25,8 @@ export default function StandingsPage() {
   return (
     <div className="min-h-screen">
       {/* Header with LIVE badge */}
-      <header className="bg-surface/90 backdrop-blur-md border-b border-border sticky top-0 z-10">
+      <header className="bg-surface/90 backdrop-blur-md border-b border-border sticky top-0 z-10"
+              style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <Link to={`/t/${slug}`} className="font-display text-xl font-black text-brand uppercase tracking-tight cursor-pointer">
