@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { Player, RoundData } from '../api/client'
@@ -51,6 +51,7 @@ function extractPlayerMatches(rounds: RoundData[], playerId: number): MatchRecor
 
 export default function PlayerDetailModal({ player, slug, onClose }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null)
+  const [entered, setEntered] = useState(false)
 
   const { data: rounds = [] } = useQuery({
     queryKey: ['rounds', slug],
@@ -62,7 +63,6 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
     const sheetEl = sheetRef.current
 
     const blockBgScroll = (e: TouchEvent) => {
-      // Allow touches inside the modal sheet — let it scroll natively
       if (sheetEl?.contains(e.target as Node)) return
       e.preventDefault()
     }
@@ -89,10 +89,11 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 anim-fade" onClick={onClose} />
 
-      {/* Sheet — this is the sole scroll container, no wrappers */}
+      {/* Sheet — clear CSS transform after entry animation so iOS allows scroll */}
       <div
         ref={sheetRef}
-        className="absolute bottom-0 inset-x-0 mx-auto w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 max-h-[85vh] overflow-y-scroll anim-sheet sm:anim-scale"
+        className={`absolute bottom-0 inset-x-0 mx-auto w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 max-h-[85vh] overflow-y-scroll ${entered ? '' : 'anim-sheet sm:anim-scale'}`}
+        onAnimationEnd={() => setEntered(true)}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
