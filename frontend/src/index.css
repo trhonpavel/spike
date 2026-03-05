@@ -1,31 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
+  /* Brand */
   --color-brand: #e4ff1a;
-  --color-brand-dim: #b8cc15;
-  --color-brand-glow: #e4ff1a33;
-  --color-surface: #0a0a0c;
-  --color-surface-2: #131316;
-  --color-surface-3: #1c1c21;
-  --color-surface-4: #26262c;
-  --color-border: #2a2a32;
-  --color-border-light: #3a3a44;
+  --color-brand-dim: #c8e010;
+  --color-brand-muted: #e4ff1a30;
+
+  /* Surfaces — true black for OLED */
+  --color-surface: #000000;
+  --color-surface-2: #0a0a0e;
+  --color-surface-3: #111116;
+  --color-surface-4: #1a1a22;
+  --color-surface-5: #222230;
+
+  /* Borders */
+  --color-border: #1e1e2a;
+  --color-border-bright: #2d2d3d;
+
+  /* Status */
   --color-qualify: #22c55e;
-  --color-qualify-dim: #16a34a;
   --color-status-draft: #f59e0b;
   --color-status-active: #3b82f6;
   --color-status-done: #22c55e;
+
+  /* Accent */
+  --color-accent-red: #ef4444;
+  --color-accent-blue: #3b82f6;
+
+  /* Font families */
+  --font-display: 'Barlow Condensed', system-ui, sans-serif;
+  --font-body: 'Barlow', system-ui, sans-serif;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 body {
-  background-color: var(--color-surface);
-  color: #e4e4e7;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #000000;
+  color: #d4d4d8;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: contain;
 }
 
-/* Hide number input spinners */
+/* Number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -35,41 +57,35 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* ===== Animations ===== */
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+/* ===== Keyframes ===== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideUpModal {
-  from { opacity: 0; transform: translateY(100%); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
-@keyframes fadeInBackdrop {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 20px var(--color-brand-glow); }
-  50% { box-shadow: 0 0 40px var(--color-brand-glow), 0 0 60px var(--color-brand-glow); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes scoreFlash {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); color: var(--color-brand); }
-  100% { transform: scale(1); }
+@keyframes glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
 }
 
 @keyframes spin {
@@ -77,148 +93,94 @@ input[type="number"] {
   to { transform: rotate(360deg); }
 }
 
-@keyframes pulseDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
 }
 
-@keyframes buttonPress {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.95); }
-  100% { transform: scale(1); }
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* Animation utility classes */
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+@keyframes countUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.4s ease-out forwards;
+/* ===== Animation classes ===== */
+.anim-fade { animation: fadeIn 0.3s ease-out both; }
+.anim-slide { animation: slideUp 0.35s ease-out both; }
+.anim-sheet { animation: slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.anim-scale { animation: scaleIn 0.25s ease-out both; }
+.anim-spin { animation: spin 0.8s linear infinite; }
+.anim-live { animation: livePulse 2s ease-in-out infinite; }
+.anim-gradient { animation: gradientShift 4s ease infinite; background-size: 200% 200%; }
+
+/* Stagger children */
+.stagger > * { opacity: 0; animation: slideUp 0.4s ease-out forwards; }
+.stagger > *:nth-child(1) { animation-delay: 0s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger > *:nth-child(4) { animation-delay: 0.18s; }
+.stagger > *:nth-child(5) { animation-delay: 0.24s; }
+.stagger > *:nth-child(6) { animation-delay: 0.30s; }
+.stagger > *:nth-child(7) { animation-delay: 0.36s; }
+
+/* ===== Neon glow ===== */
+.neon-text {
+  text-shadow: 0 0 20px rgba(228, 255, 26, 0.5), 0 0 40px rgba(228, 255, 26, 0.2);
+}
+.neon-box {
+  box-shadow: 0 0 30px rgba(228, 255, 26, 0.15), inset 0 0 30px rgba(228, 255, 26, 0.03);
+}
+.neon-border {
+  box-shadow: 0 0 15px rgba(228, 255, 26, 0.1);
+  border-color: rgba(228, 255, 26, 0.3);
 }
 
-.animate-slide-up-modal {
-  animation: slideUpModal 0.3s ease-out forwards;
-}
-
-.animate-fade-backdrop {
-  animation: fadeInBackdrop 0.2s ease-out forwards;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 2s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(228, 255, 26, 0.06) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-.animate-spin-slow {
-  animation: spin 1s linear infinite;
-}
-
-.animate-pulse-dot {
-  animation: pulseDot 1.5s ease-in-out infinite;
-}
-
-.animate-button-press:active {
-  animation: buttonPress 0.15s ease-out;
-}
-
-/* Stagger children animations */
-.stagger-children > * {
-  opacity: 0;
-  animation: slideUp 0.4s ease-out forwards;
-}
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
-
-/* Glassmorphism card */
-.glass-card {
-  background: linear-gradient(135deg, rgba(26, 26, 31, 0.8), rgba(26, 26, 31, 0.6));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.glass-card-strong {
-  background: linear-gradient(135deg, rgba(19, 19, 22, 0.9), rgba(19, 19, 22, 0.7));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Glow button */
-.glow-btn {
+/* ===== Brand gradient CTA ===== */
+.btn-brand {
+  background: linear-gradient(135deg, #e4ff1a, #c8e010);
+  color: #000;
+  font-weight: 700;
   position: relative;
   overflow: hidden;
 }
-.glow-btn::after {
+.btn-brand::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent 60%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent 50%);
   pointer-events: none;
 }
-
-/* Background decorative pattern */
-.bg-pattern {
-  background-image:
-    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
-  background-size: 32px 32px;
+.btn-brand:active {
+  transform: scale(0.97);
 }
 
-/* Brand glow orb */
-.brand-glow {
-  position: relative;
-}
-.brand-glow::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, var(--color-brand-glow), transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
+/* ===== Clipped angle accent ===== */
+.clip-angle {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
 }
 
-/* Gradient borders */
-.gradient-border-bottom {
-  border-bottom: 1px solid transparent;
-  border-image: linear-gradient(
-    90deg,
-    transparent,
-    var(--color-brand-glow),
-    transparent
-  ) 1;
+/* ===== Scoreboard number ===== */
+.score-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-light);
+/* ===== Rank medal glow ===== */
+.rank-1 { color: #fbbf24; text-shadow: 0 0 12px rgba(251,191,36,0.4); }
+.rank-2 { color: #94a3b8; text-shadow: 0 0 12px rgba(148,163,184,0.3); }
+.rank-3 { color: #d97706; text-shadow: 0 0 12px rgba(217,119,6,0.3); }
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

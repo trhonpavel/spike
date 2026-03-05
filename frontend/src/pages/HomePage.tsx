@@ -33,48 +33,52 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-pattern">
-      {/* Hero */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md stagger-children">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[600px] h-[600px] bg-brand/6 rounded-full blur-[150px] pointer-events-none" />
+
+      {/* Content */}
+      <div className="flex-1 flex items-center justify-center p-5 relative z-10">
+        <div className="w-full max-w-sm stagger">
+
           {/* Logo */}
-          <div className="text-center mb-2">
-            <img src="/img/czech-roundnet.svg" alt="Czech Roundnet" className="h-14 mx-auto block" />
+          <div className="flex justify-center mb-4">
+            <img src="/img/czech-roundnet.svg" alt="Czech Roundnet" className="h-12" />
           </div>
 
-          {/* Title with glow */}
-          <div className="text-center brand-glow mb-8">
-            <h1 className="text-6xl font-black tracking-tighter text-white relative z-10">
-              SPIKE
+          {/* Hero title */}
+          <div className="text-center mb-8">
+            <h1 className="font-display text-8xl font-black tracking-tight text-white neon-text uppercase leading-none">
+              Spike
             </h1>
-            <div className="mt-2 text-xs font-mono uppercase tracking-[0.3em] text-zinc-500 relative z-10">
+            <p className="text-[11px] font-display font-semibold uppercase tracking-[0.4em] text-zinc-500 mt-2">
               Tournament System
-            </div>
+            </p>
           </div>
 
-          {/* Worlds 2026 banner */}
-          <div className="glass-card rounded-2xl p-5 text-center relative overflow-hidden mb-6">
-            <div className="absolute inset-0 animate-shimmer pointer-events-none" />
-            <div className="relative z-10">
+          {/* Worlds 2026 */}
+          <div className="relative rounded-2xl overflow-hidden mb-6 neon-border border border-brand/10 bg-surface-3/80">
+            <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-transparent to-transparent pointer-events-none" />
+            <div className="relative px-5 py-4 flex items-center gap-4">
               <img
                 src="/img/worlds-2026.png"
                 alt="Roundnet World Championship 2026"
-                className="h-14 mx-auto"
+                className="h-12 shrink-0"
               />
-              <div className="mt-3 space-y-1">
-                <div className="text-sm font-medium text-zinc-200">
-                  Czech National Team Qualifier
+              <div className="min-w-0">
+                <div className="font-display font-bold text-sm text-white uppercase tracking-wide">
+                  Czech Qualifier
                 </div>
-                <div className="text-xs font-mono text-zinc-500">
-                  Parc du Tremblay, Paris &middot; September 2–6, 2026
+                <div className="text-[11px] text-zinc-500 mt-0.5">
+                  Worlds 2026 &middot; Paris &middot; Sep 2–6
                 </div>
               </div>
             </div>
           </div>
 
           {/* Create tournament */}
-          <div className="glass-card-strong rounded-2xl p-6 mb-4">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">
+          <div className="bg-surface-2 border border-border rounded-2xl p-5 mb-3">
+            <h2 className="font-display font-bold text-xs uppercase tracking-widest text-zinc-500 mb-3">
               New Tournament
             </h2>
             <form onSubmit={handleCreate} className="space-y-3">
@@ -83,38 +87,29 @@ export default function HomePage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Tournament name"
-                className="w-full px-4 py-3.5 bg-surface-3/80 border border-border rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/40 transition-all"
+                className="w-full px-4 py-3.5 bg-surface-3 border border-border rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:border-brand/50 focus:shadow-[0_0_20px_rgba(228,255,26,0.08)] transition-all text-base"
                 maxLength={200}
                 autoFocus
               />
-              {error && (
-                <div className="flex items-center gap-2 text-red-400 text-sm animate-fade-in">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {error}
-                </div>
-              )}
+              {error && <p className="text-accent-red text-sm font-medium anim-fade">{error}</p>}
               <button
                 type="submit"
                 disabled={loading || !name.trim()}
-                className="glow-btn w-full py-3.5 bg-brand text-surface font-bold rounded-xl hover:bg-brand-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm uppercase tracking-wider"
+                className="btn-brand w-full py-3.5 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-surface/30 border-t-surface rounded-full animate-spin-slow" />
-                    Creating...
+                    <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full anim-spin" />
+                    Creating
                   </span>
-                ) : (
-                  'Create Tournament'
-                )}
+                ) : 'Create Tournament'}
               </button>
             </form>
           </div>
 
           {/* Open existing */}
-          <div className="glass-card-strong rounded-2xl p-6">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">
+          <div className="bg-surface-2 border border-border rounded-2xl p-5 mb-6">
+            <h2 className="font-display font-bold text-xs uppercase tracking-widest text-zinc-500 mb-3">
               Open Existing
             </h2>
             <form onSubmit={handleOpen} className="flex gap-2">
@@ -123,31 +118,29 @@ export default function HomePage() {
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 placeholder="Code or link"
-                className="flex-1 px-4 py-3.5 bg-surface-3/80 border border-border rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/40 transition-all"
+                className="flex-1 min-w-0 px-4 py-3.5 bg-surface-3 border border-border rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:border-brand/50 transition-all text-base"
               />
               <button
                 type="submit"
                 disabled={!slug.trim()}
-                className="px-6 py-3.5 border border-border-light text-white font-semibold rounded-xl hover:bg-surface-3 hover:border-brand/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="px-6 py-3.5 border border-border-bright text-white font-display font-bold uppercase tracking-wider rounded-xl hover:bg-surface-3 hover:border-brand/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm cursor-pointer"
               >
-                Open
+                Go
               </button>
             </form>
           </div>
 
-          <p className="text-center text-xs text-zinc-600 mt-6">
-            Share the tournament link so players can follow results live
+          <p className="text-center text-xs text-zinc-700">
+            Share the link so players can follow live
           </p>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="py-6 px-4">
-        <div className="flex items-center justify-center gap-2 opacity-40">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">
-            Powered by Czech Roundnet
-          </span>
-        </div>
+      <footer className="py-5 text-center">
+        <span className="text-[10px] font-display uppercase tracking-[0.3em] text-zinc-700">
+          Czech Roundnet Association
+        </span>
       </footer>
     </div>
   )

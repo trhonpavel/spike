@@ -2,7 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { login, getSessionToken, clearSessionToken } from '../api/client'
 
 export default function PasswordGate({ children }: { children: ReactNode }) {
-  const [authed, setAuthed] = useState<boolean | null>(null) // null = checking
+  const [authed, setAuthed] = useState<boolean | null>(null)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -47,11 +47,8 @@ export default function PasswordGate({ children }: { children: ReactNode }) {
 
   if (authed === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-pattern">
-        <div className="flex flex-col items-center gap-4 animate-fade-in">
-          <div className="w-8 h-8 border-2 border-brand/30 border-t-brand rounded-full animate-spin-slow" />
-          <span className="text-xs font-mono uppercase tracking-widest text-zinc-600">Loading</span>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-brand/20 border-t-brand rounded-full anim-spin" />
       </div>
     )
   }
@@ -59,67 +56,62 @@ export default function PasswordGate({ children }: { children: ReactNode }) {
   if (authed) return <>{children}</>
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-pattern">
-      <div className="w-full max-w-sm stagger-children">
-        {/* Title with glow */}
-        <div className="text-center brand-glow mb-8">
-          <h1 className="text-5xl font-black tracking-tighter text-white relative z-10">
-            SPIKE
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Background glow orb */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-xs relative z-10 stagger">
+        {/* Title */}
+        <div className="text-center mb-10">
+          <h1 className="font-display text-7xl font-black tracking-tight text-white neon-text uppercase">
+            Spike
           </h1>
-          <div className="mt-2 text-xs font-mono uppercase tracking-[0.3em] text-zinc-500 relative z-10">
+          <p className="text-xs font-display font-semibold uppercase tracking-[0.4em] text-zinc-500 mt-3">
             Tournament System
-          </div>
+          </p>
         </div>
 
-        {/* Password card */}
-        <div className="glass-card-strong rounded-2xl p-6 animate-slide-up">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-5">
-            Enter Password
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            autoComplete="username"
+            value="spike"
+            readOnly
+            className="hidden"
+            tabIndex={-1}
+          />
+          <div>
+            <label htmlFor="gate-pw" className="block text-[11px] font-display font-semibold uppercase tracking-widest text-zinc-500 mb-2">
+              Password
+            </label>
             <input
-              type="text"
-              autoComplete="username"
-              value="spike"
-              readOnly
-              className="hidden"
-              tabIndex={-1}
+              id="gate-pw"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              className="w-full px-4 py-4 bg-surface-3 border border-border rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:border-brand/50 focus:shadow-[0_0_20px_rgba(228,255,26,0.1)] transition-all text-base"
+              autoFocus
+              autoComplete="current-password"
             />
-            <div className="relative">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full px-4 py-3.5 bg-surface-3/80 border border-border rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/40 transition-all"
-                autoFocus
-                autoComplete="current-password"
-              />
-            </div>
-            {error && (
-              <div className="flex items-center gap-2 text-red-400 text-sm animate-fade-in">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                {error}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={loading || !password}
-              className="glow-btn w-full py-3.5 bg-brand text-surface font-bold rounded-xl hover:bg-brand-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm uppercase tracking-wider"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-surface/30 border-t-surface rounded-full animate-spin-slow" />
-                  Checking...
-                </span>
-              ) : (
-                'Enter'
-              )}
-            </button>
-          </form>
-        </div>
+          </div>
+          {error && (
+            <p className="text-accent-red text-sm font-medium anim-fade">{error}</p>
+          )}
+          <button
+            type="submit"
+            disabled={loading || !password}
+            className="btn-brand w-full py-4 rounded-xl text-base font-display font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full anim-spin" />
+                Verifying
+              </span>
+            ) : 'Enter'}
+          </button>
+        </form>
       </div>
     </div>
   )

@@ -10,24 +10,19 @@ interface Props {
 
 export default function GroupCard({ group, slug, admin, token }: Props) {
   return (
-    <div className="glass-card-strong rounded-2xl overflow-hidden border-l-2 border-l-brand/30">
-      <div className="px-4 py-3 border-b border-border/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-brand/10 text-brand text-xs font-bold font-mono">
-              {group.group_index + 1}
-            </span>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
-              Group
-            </h4>
-          </div>
-          <span className="text-[10px] text-zinc-600 font-mono truncate ml-3 max-w-[50%] text-right">
-            {group.players.map((p) => p.name).join(' / ')}
-          </span>
-        </div>
+    <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden">
+      {/* Header — angled accent */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-brand/8 to-transparent border-b border-border">
+        <span className="score-num text-xl text-brand">
+          {group.group_index + 1}
+        </span>
+        <div className="h-4 w-px bg-border" />
+        <span className="text-xs text-zinc-500 truncate font-medium">
+          {group.players.map((p) => p.name).join(' · ')}
+        </span>
       </div>
 
-      <div className="divide-y divide-border/50">
+      <div className="divide-y divide-border">
         {group.matches.map((match) => (
           <MatchScoreInput
             key={match.id}
