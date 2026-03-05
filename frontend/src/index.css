@@ -97,6 +97,12 @@ html.light .text-zinc-500 { color: #6b7280; }
 html.light .text-zinc-600 { color: #4b5563; }
 html.light .text-zinc-700 { color: #374151; }
 html.light .placeholder-zinc-700::placeholder { color: #9ca3af; }
+html.light .home-czech-logo {
+  filter: brightness(0.12) contrast(1.25);
+}
+html.light .home-worlds-logo {
+  filter: brightness(0.82) contrast(1.15) saturate(1.1);
+}
 
 /* Number input spinners */
 input[type="number"]::-webkit-inner-spin-button,

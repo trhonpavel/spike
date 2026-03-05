@@ -46,7 +46,7 @@ export default function HomePage() {
 
           {/* Logo */}
           <div className="flex justify-center mb-4">
-            <img src="/img/czech-roundnet.svg" alt="Czech Roundnet" className="h-12" />
+            <img src="/img/czech-roundnet.svg" alt="Czech Roundnet" className="h-12 home-czech-logo" />
           </div>
 
           {/* Hero title */}
@@ -66,7 +66,7 @@ export default function HomePage() {
               <img
                 src="/img/worlds-2026.png"
                 alt="Roundnet World Championship 2026"
-                className="h-12 shrink-0"
+                className="h-12 shrink-0 home-worlds-logo"
               />
               <div className="min-w-0">
                 <div className="font-display font-bold text-sm text-white uppercase tracking-wide">
