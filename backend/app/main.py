@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from starlette.responses import JSONResponse
 
 from app.config import settings
@@ -11,10 +12,28 @@ from app.api.websocket import router as ws_router
 from app.api.auth import router as auth_router, validate_token
 
 
+async def _ensure_backward_compatible_schema():
+    """Patch legacy DBs that were created before new player stat columns existed."""
+    if engine.dialect.name != "postgresql":
+        return
+
+    statements = [
+        "ALTER TABLE players ADD COLUMN IF NOT EXISTS elo_rating DOUBLE PRECISION NOT NULL DEFAULT 1500.0",
+        "ALTER TABLE players ADD COLUMN IF NOT EXISTS point_differential INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE players ADD COLUMN IF NOT EXISTS games_played INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE players ADD COLUMN IF NOT EXISTS losses INTEGER NOT NULL DEFAULT 0",
+    ]
+
+    async with engine.begin() as conn:
+        for sql in statements:
+            await conn.execute(text(sql))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await _ensure_backward_compatible_schema()
     yield
 
 
