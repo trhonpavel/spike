@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { Player, RoundData } from '../api/client'
@@ -49,10 +50,28 @@ function extractPlayerMatches(rounds: RoundData[], playerId: number): MatchRecor
 }
 
 export default function PlayerDetailModal({ player, slug, onClose }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
   const { data: rounds = [] } = useQuery({
     queryKey: ['rounds', slug],
     queryFn: () => api.getRounds(slug),
   })
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      window.scrollTo(0, scrollY)
+    }
+  }, [])
 
   const matches = extractPlayerMatches(rounds, player.id)
   const totalMatches = matches.length
@@ -61,13 +80,14 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
   const ballRate = player.balls_total > 0 ? Math.round((player.balls_won / player.balls_total) * 100) : 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="fixed inset-0 bg-black/80 anim-fade" onClick={onClose} />
-      <div
-        className="relative w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl max-h-[88vh] overflow-y-auto overscroll-contain anim-sheet sm:anim-scale"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-        onTouchMove={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-black/80 anim-fade" onClick={onClose} style={{ touchAction: 'none' }} />
+      <div className="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center" style={{ pointerEvents: 'none' }}>
+        <div
+          ref={scrollRef}
+          className="relative w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl max-h-[88vh] overflow-y-auto overscroll-contain anim-sheet sm:anim-scale"
+          style={{ pointerEvents: 'auto' }}
+        >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-10 h-1 rounded-full bg-zinc-800" />
@@ -145,6 +165,7 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
         </div>
 
         <div className="h-6" />
+        </div>
       </div>
     </div>
   )
