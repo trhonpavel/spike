@@ -36,6 +36,10 @@ class PlayerOut(BaseModel):
     balls_total: int
     waitings: int
     rating: float
+    elo_rating: float = 1500.0
+    point_differential: int = 0
+    games_played: int = 0
+    losses: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -74,3 +78,54 @@ class ScoreUpdate(BaseModel):
 class StandingOut(BaseModel):
     rank: int
     player: PlayerOut
+
+
+class PartnerStatOut(BaseModel):
+    partner_id: int
+    partner_name: str
+    games: int
+    wins: int
+    point_diff: int
+    avg_diff: float
+    win_rate: float
+
+
+class PlayerStatsOut(BaseModel):
+    games_played: int = 0
+    wins: int = 0
+    losses: int = 0
+    point_differential: int = 0
+    avg_point_diff: float = 0.0
+    win_rate: float = 0.0
+    consistency: float = 0.0
+    clutch_score: float = 0.0
+    form: float = 0.0
+    adaptability: int = 0
+    partner_stats: list[PartnerStatOut] = []
+
+
+class MatchPlayerStatOut(BaseModel):
+    id: int
+    match_id: int
+    player_id: int
+    side: str
+    partner_id: int
+    score_for: int
+    score_against: int
+    won: bool
+    elo_before: float
+    elo_after: float
+
+    model_config = {"from_attributes": True}
+
+
+class PartnerRecordOut(BaseModel):
+    id: int
+    tournament_id: int
+    player1_id: int
+    player2_id: int
+    player1_name: str = ""
+    player2_name: str = ""
+    games_together: int
+    wins_together: int
+    point_diff_together: int

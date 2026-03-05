@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import String, Integer, Float, ForeignKey, Enum as SAEnum
+from sqlalchemy import String, Integer, Float, Boolean, ForeignKey, Enum as SAEnum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
 
@@ -43,6 +43,10 @@ class Player(Base):
     balls_total: Mapped[int] = mapped_column(Integer, default=0)
     waitings: Mapped[int] = mapped_column(Integer, default=0)
     rating: Mapped[float] = mapped_column(Float, default=0.0)
+    elo_rating: Mapped[float] = mapped_column(Float, default=1500.0)
+    point_differential: Mapped[int] = mapped_column(Integer, default=0)
+    games_played: Mapped[int] = mapped_column(Integer, default=0)
+    losses: Mapped[int] = mapped_column(Integer, default=0)
 
     tournament: Mapped["Tournament"] = relationship(back_populates="players")
 
@@ -110,3 +114,42 @@ class RoundWaiting(Base):
 
     round: Mapped["Round"] = relationship(back_populates="waitings")
     player: Mapped["Player"] = relationship()
+
+
+class MatchPlayerStat(Base):
+    """Per-player per-match record for Elo history and detailed stats."""
+    __tablename__ = "match_player_stats"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
+    side: Mapped[str] = mapped_column(String(10))  # "team1" or "team2"
+    partner_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
+    score_for: Mapped[int] = mapped_column(Integer)
+    score_against: Mapped[int] = mapped_column(Integer)
+    won: Mapped[bool] = mapped_column(Boolean)
+    elo_before: Mapped[float] = mapped_column(Float)
+    elo_after: Mapped[float] = mapped_column(Float)
+
+    match: Mapped["Match"] = relationship(foreign_keys=[match_id])
+    player: Mapped["Player"] = relationship(foreign_keys=[player_id])
+    partner: Mapped["Player"] = relationship(foreign_keys=[partner_id])
+
+
+class PartnerRecord(Base):
+    """Denormalized partner synergy record for fast queries."""
+    __tablename__ = "partner_records"
+    __table_args__ = (
+        UniqueConstraint("tournament_id", "player1_id", "player2_id", name="uq_partner_pair"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tournament_id: Mapped[int] = mapped_column(ForeignKey("tournaments.id"))
+    player1_id: Mapped[int] = mapped_column(ForeignKey("players.id"))  # always min(p1, p2)
+    player2_id: Mapped[int] = mapped_column(ForeignKey("players.id"))  # always max(p1, p2)
+    games_together: Mapped[int] = mapped_column(Integer, default=0)
+    wins_together: Mapped[int] = mapped_column(Integer, default=0)
+    point_diff_together: Mapped[int] = mapped_column(Integer, default=0)
+
+    player1: Mapped["Player"] = relationship(foreign_keys=[player1_id])
+    player2: Mapped["Player"] = relationship(foreign_keys=[player2_id])

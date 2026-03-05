@@ -6,16 +6,25 @@ import PlayerDetailModal from './PlayerDetailModal'
 
 const QUALIFY_COUNT = 10
 
+type SortMode = 'rating' | 'elo' | 'win_rate'
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'rating', label: 'Pts' },
+  { value: 'elo', label: 'Elo' },
+  { value: 'win_rate', label: 'Win%' },
+]
+
 interface Props {
   slug: string
 }
 
 export default function StandingsTable({ slug }: Props) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
+  const [sortBy, setSortBy] = useState<SortMode>('rating')
 
   const { data: standings = [], isLoading } = useQuery({
-    queryKey: ['standings', slug],
-    queryFn: () => api.getStandings(slug),
+    queryKey: ['standings', slug, sortBy],
+    queryFn: () => api.getStandings(slug, sortBy),
   })
 
   if (isLoading) {
@@ -37,11 +46,51 @@ export default function StandingsTable({ slug }: Props) {
   }
 
   const hasAnyPoints = standings.some((s: Standing) => s.player.rating > 0)
-  const topRating = standings[0]?.player.rating || 1
   const showQualify = hasAnyPoints && standings.length > QUALIFY_COUNT
+
+  function getSortValue(player: Player): string {
+    if (sortBy === 'elo') return player.elo_rating.toFixed(0)
+    if (sortBy === 'win_rate') return player.games_played > 0 ? `${(player.wins / player.games_played * 100).toFixed(0)}%` : '0%'
+    return player.rating.toFixed(1)
+  }
+
+  function getTopValue(): number {
+    if (standings.length === 0) return 1
+    const p = standings[0].player
+    if (sortBy === 'elo') return p.elo_rating || 1500
+    if (sortBy === 'win_rate') return p.games_played > 0 ? (p.wins / p.games_played * 100) : 1
+    return p.rating || 1
+  }
+
+  function getBarValue(player: Player): number {
+    const top = getTopValue()
+    if (top === 0) return 0
+    if (sortBy === 'elo') return (player.elo_rating / top) * 100
+    if (sortBy === 'win_rate') return player.games_played > 0 ? ((player.wins / player.games_played * 100) / top) * 100 : 0
+    return (player.rating / top) * 100
+  }
+
+  const columnLabel = sortBy === 'elo' ? 'Elo' : sortBy === 'win_rate' ? 'W%' : 'Pts'
 
   return (
     <div className="space-y-3">
+      {/* Sort controls */}
+      <div className="flex items-center justify-center gap-1 bg-surface-2 rounded-xl p-1 border border-border">
+        {SORT_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setSortBy(opt.value)}
+            className={`flex-1 px-3 py-1.5 rounded-lg font-display text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+              sortBy === opt.value
+                ? 'bg-brand text-black'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       {/* Qualify banner */}
       {showQualify && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-qualify/5 border border-qualify/10">
@@ -60,7 +109,7 @@ export default function StandingsTable({ slug }: Props) {
           <span className="font-display text-[10px] font-bold uppercase tracking-widest flex-1">Player</span>
           <span className="font-display text-[10px] font-bold uppercase tracking-widest w-8 text-right">W</span>
           <span className="font-display text-[10px] font-bold uppercase tracking-widest w-14 text-right">Balls</span>
-          <span className="font-display text-[10px] font-bold uppercase tracking-widest w-14 text-right">Pts</span>
+          <span className="font-display text-[10px] font-bold uppercase tracking-widest w-14 text-right">{columnLabel}</span>
         </div>
 
         {/* Rows */}
@@ -93,7 +142,7 @@ export default function StandingsTable({ slug }: Props) {
                   <div className="h-1 mt-1.5 bg-surface-4 rounded-full overflow-hidden max-w-[120px]">
                     <div
                       className={`h-full rounded-full ${qualifies ? 'bg-qualify' : 'bg-zinc-700'}`}
-                      style={{ width: `${topRating > 0 ? (s.player.rating / topRating) * 100 : 0}%` }}
+                      style={{ width: `${Math.min(getBarValue(s.player), 100)}%` }}
                     />
                   </div>
                 )}
@@ -102,8 +151,8 @@ export default function StandingsTable({ slug }: Props) {
               {/* Stats */}
               <span className="font-display text-sm font-bold text-zinc-400 w-8 text-right tabular-nums">{s.player.wins}</span>
               <span className="text-xs text-zinc-600 w-14 text-right tabular-nums">{s.player.balls_won}/{s.player.balls_total}</span>
-              <span className={`font-display text-base font-black w-14 text-right tabular-nums ${qualifies ? 'text-qualify' : 'text-brand'}`}>
-                {s.player.rating.toFixed(1)}
+              <span className={`font-display text-base font-black w-14 text-right tabular-nums ${qualifies ? 'text-qualify' : sortBy === 'elo' ? 'text-blue-400' : 'text-brand'}`}>
+                {getSortValue(s.player)}
               </span>
             </div>
           )

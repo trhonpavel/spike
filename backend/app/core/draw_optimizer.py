@@ -9,6 +9,7 @@ class DrawPlayer:
     name: str
     rating: float
     waitings: int
+    elo_rating: float = 1500.0
 
 
 def find_diff(ratings: list[float]) -> float:
@@ -41,5 +42,5 @@ def rate_draw(groups: list[list[DrawPlayer]], played_games: list[list[int]]) -> 
         if same == 4:
             return -1.0
         rating += [0, 0, 6, 20][same]
-        rating += find_diff([p.rating for p in group])
+        rating += find_diff([p.elo_rating for p in group])
     return rating

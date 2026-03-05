@@ -146,11 +146,11 @@ async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
     players.sort(key=lambda p: p.waitings)
     waiting_players = players[:waiting_count]
     active_players = players[waiting_count:]
-    active_players.sort(key=lambda p: -p.rating)
+    active_players.sort(key=lambda p: -p.elo_rating)
 
     # Build draw players and form initial groups
     draw_players = [
-        DrawPlayer(id=p.id, name=p.name, rating=p.rating, waitings=p.waitings)
+        DrawPlayer(id=p.id, name=p.name, rating=p.rating, waitings=p.waitings, elo_rating=p.elo_rating)
         for p in active_players
     ]
     games_count = len(draw_players) // 4

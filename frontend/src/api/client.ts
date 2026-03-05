@@ -52,6 +52,10 @@ export interface Player {
   balls_total: number
   waitings: number
   rating: number
+  elo_rating: number
+  point_differential: number
+  games_played: number
+  losses: number
 }
 
 export interface MatchData {
@@ -83,6 +87,55 @@ export interface RoundData {
 export interface Standing {
   rank: number
   player: Player
+}
+
+export interface PartnerStat {
+  partner_id: number
+  partner_name: string
+  games: number
+  wins: number
+  point_diff: number
+  avg_diff: number
+  win_rate: number
+}
+
+export interface PlayerStats {
+  games_played: number
+  wins: number
+  losses: number
+  point_differential: number
+  avg_point_diff: number
+  win_rate: number
+  consistency: number
+  clutch_score: number
+  form: number
+  adaptability: number
+  partner_stats: PartnerStat[]
+}
+
+export interface MatchPlayerStatData {
+  id: number
+  match_id: number
+  player_id: number
+  side: string
+  partner_id: number
+  score_for: number
+  score_against: number
+  won: boolean
+  elo_before: number
+  elo_after: number
+}
+
+export interface PartnerRecord {
+  id: number
+  tournament_id: number
+  player1_id: number
+  player2_id: number
+  player1_name: string
+  player2_name: string
+  games_together: number
+  wins_together: number
+  point_diff_together: number
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -159,6 +212,15 @@ export const api = {
       headers: headers(token),
     }),
 
-  getStandings: (slug: string) =>
-    request<Standing[]>(`${BASE}/${slug}/standings`),
+  getStandings: (slug: string, sortBy: string = 'rating') =>
+    request<Standing[]>(`${BASE}/${slug}/standings?sort_by=${sortBy}`),
+
+  getPlayerStats: (slug: string, playerId: number) =>
+    request<PlayerStats>(`${BASE}/${slug}/players/${playerId}/stats`),
+
+  getPartnerRecords: (slug: string, playerId: number) =>
+    request<PartnerRecord[]>(`${BASE}/${slug}/partner-records?player_id=${playerId}`),
+
+  getMatchPlayerStats: (slug: string, playerId: number) =>
+    request<MatchPlayerStatData[]>(`${BASE}/${slug}/match-player-stats?player_id=${playerId}`),
 }
