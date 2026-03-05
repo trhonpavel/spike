@@ -45,7 +45,58 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: contain;
+  transition: background-color 0.3s, color 0.3s;
 }
+
+/* ===== Light mode ===== */
+html.light {
+  --color-brand: #7aa800;
+  --color-brand-dim: #669100;
+  --color-brand-muted: #7aa80025;
+  --color-surface: #f0f0f3;
+  --color-surface-2: #ffffff;
+  --color-surface-3: #e8e8ed;
+  --color-surface-4: #dddde4;
+  --color-surface-5: #d0d0da;
+  --color-border: #d0d0d8;
+  --color-border-bright: #b8b8c4;
+}
+html.light body {
+  background-color: #f0f0f3;
+  color: #1a1a2e;
+}
+html.light .neon-text {
+  text-shadow: none;
+}
+html.light .neon-box {
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+html.light .neon-border {
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  border-color: var(--color-border);
+}
+html.light .btn-brand {
+  background: linear-gradient(135deg, #7aa800, #669100);
+  color: #fff;
+}
+html.light .btn-brand::before {
+  background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent 50%);
+}
+html.light .score-num {
+  color: #1a1a2e;
+}
+html.light .rank-1 { color: #b8860b; text-shadow: none; }
+html.light .rank-2 { color: #6b7280; text-shadow: none; }
+html.light .rank-3 { color: #b45309; text-shadow: none; }
+
+/* Light mode text color overrides */
+html.light .text-white { color: #1a1a2e; }
+html.light .text-zinc-300 { color: #374151; }
+html.light .text-zinc-400 { color: #4b5563; }
+html.light .text-zinc-500 { color: #6b7280; }
+html.light .text-zinc-600 { color: #9ca3af; }
+html.light .text-zinc-700 { color: #c0c0cc; }
+html.light .placeholder-zinc-700::placeholder { color: #9ca3af; }
 
 /* Number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
