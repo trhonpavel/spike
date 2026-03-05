@@ -65,36 +65,28 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
       className="fixed inset-0 z-50 bg-surface overflow-y-auto anim-fade"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
-      {/* Sticky close header */}
-      <div className="sticky top-0 z-10 bg-surface/90 backdrop-blur-md border-b border-border"
-           style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 text-zinc-500 hover:text-brand transition-colors cursor-pointer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-            </svg>
-            <span className="font-display text-sm font-bold uppercase tracking-wider">Back</span>
-          </button>
-          <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-            Player Detail
-          </span>
-        </div>
-      </div>
-
       {/* Content — just normal flow, no overflow tricks */}
       <div className="max-w-md mx-auto px-5 py-5">
-        {/* Name + rating */}
-        <div className="mb-5">
-          <h2 className="font-display text-3xl font-black text-white uppercase tracking-tight">
-            {player.name}
-          </h2>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="score-num text-xl text-brand">{player.rating.toFixed(1)}</span>
-            <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">Rating</span>
+        {/* Close + name row */}
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <h2 className="font-display text-3xl font-black text-white uppercase tracking-tight">
+              {player.name}
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="score-num text-xl text-brand">{player.rating.toFixed(1)}</span>
+              <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">Rating</span>
+            </div>
           </div>
+          <button
+            onClick={onClose}
+            className="p-2 -mr-2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            aria-label="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
 
         {/* Stats grid */}
@@ -145,6 +137,14 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
             </div>
           )}
         </div>
+
+        {/* Back button at bottom */}
+        <button
+          onClick={onClose}
+          className="mt-5 w-full py-3 rounded-xl font-display text-sm font-bold uppercase tracking-wider text-zinc-500 hover:text-brand border border-border hover:border-brand/30 transition-all cursor-pointer"
+        >
+          ← Back
+        </button>
 
         <div className="h-8" />
       </div>
