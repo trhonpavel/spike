@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { Player, RoundData } from '../api/client'
@@ -55,16 +54,6 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
     queryFn: () => api.getRounds(slug),
   })
 
-  // Prevent body scroll behind modal
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-    }
-  }, [])
-
   const matches = extractPlayerMatches(rounds, player.id)
   const totalMatches = matches.length
   const wins = matches.filter(m => m.won).length
@@ -72,97 +61,93 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
   const ballRate = player.balls_total > 0 ? Math.round((player.balls_won / player.balls_total) * 100) : 0
 
   return (
-    <>
-      {/* Backdrop — fixed behind everything */}
-      <div className="fixed inset-0 z-50 bg-black/80 anim-fade" onClick={onClose} />
-
-      {/* Scrollable viewport — the FIXED root itself scrolls, not a child */}
-      <div className="fixed inset-0 z-50 overflow-y-auto" onClick={onClose}>
-        <div className="flex min-h-full items-end sm:items-center justify-center">
-          <div
-            className="relative w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl sm:my-8 anim-sheet sm:anim-scale"
-            onClick={(e) => e.stopPropagation()}
+    <div
+      className="fixed inset-0 z-50 bg-surface overflow-y-auto anim-fade"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    >
+      {/* Sticky close header */}
+      <div className="sticky top-0 z-10 bg-surface/90 backdrop-blur-md border-b border-border"
+           style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 text-zinc-500 hover:text-brand transition-colors cursor-pointer"
           >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 sm:hidden">
-              <div className="w-10 h-1 rounded-full bg-zinc-800" />
-            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+            </svg>
+            <span className="font-display text-sm font-bold uppercase tracking-wider">Back</span>
+          </button>
+          <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+            Player Detail
+          </span>
+        </div>
+      </div>
 
-            {/* Header */}
-            <div className="px-5 pt-3 pb-4 flex items-start justify-between">
-              <div>
-                <h2 className="font-display text-2xl font-black text-white uppercase tracking-tight">
-                  {player.name}
-                </h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="score-num text-lg text-brand">{player.rating.toFixed(1)}</span>
-                  <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">Rating</span>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-zinc-600 hover:text-white transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
+      {/* Content — just normal flow, no overflow tricks */}
+      <div className="max-w-md mx-auto px-5 py-5">
+        {/* Name + rating */}
+        <div className="mb-5">
+          <h2 className="font-display text-3xl font-black text-white uppercase tracking-tight">
+            {player.name}
+          </h2>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="score-num text-xl text-brand">{player.rating.toFixed(1)}</span>
+            <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">Rating</span>
+          </div>
+        </div>
 
-            {/* Stats — big numbers */}
-            <div className="px-5 grid grid-cols-4 gap-2 pb-4">
-              {[
-                { val: player.wins, label: 'Wins' },
-                { val: totalMatches, label: 'Games' },
-                { val: `${winRate}%`, label: 'Win%' },
-                { val: `${ballRate}%`, label: 'Ball%' },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-surface-3 rounded-xl p-3 text-center border border-border">
-                  <div className="score-num text-xl text-white">{stat.val}</div>
-                  <div className="font-display text-[9px] font-bold uppercase tracking-widest text-zinc-600 mt-1">{stat.label}</div>
+        {/* Stats grid */}
+        <div className="grid grid-cols-4 gap-2 mb-5">
+          {[
+            { val: player.wins, label: 'Wins' },
+            { val: totalMatches, label: 'Games' },
+            { val: `${winRate}%`, label: 'Win%' },
+            { val: `${ballRate}%`, label: 'Ball%' },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-surface-2 rounded-xl p-3 text-center border border-border">
+              <div className="score-num text-xl text-white">{stat.val}</div>
+              <div className="font-display text-[9px] font-bold uppercase tracking-widest text-zinc-600 mt-1">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Extra stats */}
+        <div className="flex gap-4 text-xs text-zinc-600 mb-5">
+          <span>Balls {player.balls_won}/{player.balls_total}</span>
+          <span>Sat out {player.waitings}x</span>
+        </div>
+
+        {/* Match history */}
+        <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden">
+          <h3 className="px-4 py-3 font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 border-b border-border">
+            Match History
+          </h3>
+          {matches.length === 0 ? (
+            <p className="px-4 py-5 text-zinc-700 text-sm">No matches played yet</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {matches.map((m, i) => (
+                <div key={i} className="px-4 py-3 flex items-center gap-3">
+                  <span className="font-display text-[10px] font-bold text-zinc-700 w-7 shrink-0">R{m.roundNumber}</span>
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${m.won ? 'bg-qualify' : 'bg-accent-red'}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-zinc-300 truncate">
+                      <span className="text-zinc-600">w/</span> {m.partner}
+                    </div>
+                    <div className="text-xs text-zinc-700 truncate">vs {m.opponents}</div>
+                  </div>
+                  <span className={`score-num text-sm ${m.won ? 'text-qualify' : 'text-accent-red'}`}>
+                    {m.score}
+                  </span>
                 </div>
               ))}
             </div>
-
-            {/* Extra */}
-            <div className="px-5 pb-3 flex gap-4 text-xs text-zinc-600">
-              <span>Balls {player.balls_won}/{player.balls_total}</span>
-              <span>Sat out {player.waitings}x</span>
-            </div>
-
-            {/* Match history */}
-            <div className="border-t border-border">
-              <h3 className="px-5 py-3 font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                Match History
-              </h3>
-              {matches.length === 0 ? (
-                <p className="px-5 pb-5 text-zinc-700 text-sm">No matches played yet</p>
-              ) : (
-                <div className="divide-y divide-border/50">
-                  {matches.map((m, i) => (
-                    <div key={i} className="px-5 py-3 flex items-center gap-3">
-                      <span className="font-display text-[10px] font-bold text-zinc-700 w-7 shrink-0">R{m.roundNumber}</span>
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${m.won ? 'bg-qualify' : 'bg-accent-red'}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-zinc-300 truncate">
-                          <span className="text-zinc-600">w/</span> {m.partner}
-                        </div>
-                        <div className="text-xs text-zinc-700 truncate">vs {m.opponents}</div>
-                      </div>
-                      <span className={`score-num text-sm ${m.won ? 'text-qualify' : 'text-accent-red'}`}>
-                        {m.score}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="h-6" />
-          </div>
+          )}
         </div>
+
+        <div className="h-8" />
       </div>
-    </>
+    </div>
   )
 }
