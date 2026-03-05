@@ -57,19 +57,55 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
     queryFn: () => api.getRounds(slug),
   })
 
-  // Lock body scroll while modal is open
+  // Lock body scroll — iOS PWA needs touchmove blocking at document level
   useEffect(() => {
-    const scrollY = window.scrollY
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${scrollY}px`
-    document.body.style.left = '0'
-    document.body.style.right = '0'
+    const scrollEl = scrollRef.current
+    let startY = 0
+
+    // Track touch start position on the scrollable element
+    const onTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].pageY
+    }
+
+    // Inside the modal: allow scroll but prevent overscroll at boundaries
+    const onScrollElTouchMove = (e: TouchEvent) => {
+      if (!scrollEl) return
+      const currentY = e.touches[0].pageY
+      const { scrollTop, scrollHeight, clientHeight } = scrollEl
+      const atTop = scrollTop <= 0
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1
+
+      if (scrollHeight <= clientHeight) {
+        // Not scrollable — block
+        e.preventDefault()
+      } else if (atTop && currentY > startY) {
+        // At top, swiping down — block overscroll
+        e.preventDefault()
+      } else if (atBottom && currentY < startY) {
+        // At bottom, swiping up — block overscroll
+        e.preventDefault()
+      }
+      // Otherwise allow natural scroll inside modal
+    }
+
+    // Outside the modal: block everything
+    const onDocTouchMove = (e: TouchEvent) => {
+      if (scrollEl?.contains(e.target as Node)) return
+      e.preventDefault()
+    }
+
+    scrollEl?.addEventListener('touchstart', onTouchStart, { passive: true })
+    scrollEl?.addEventListener('touchmove', onScrollElTouchMove, { passive: false })
+    document.addEventListener('touchmove', onDocTouchMove, { passive: false })
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
     return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      window.scrollTo(0, scrollY)
+      scrollEl?.removeEventListener('touchstart', onTouchStart)
+      scrollEl?.removeEventListener('touchmove', onScrollElTouchMove)
+      document.removeEventListener('touchmove', onDocTouchMove)
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
     }
   }, [])
 
