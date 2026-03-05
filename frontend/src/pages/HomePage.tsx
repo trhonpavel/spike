@@ -63,11 +63,13 @@ export default function HomePage() {
           <div className="relative rounded-2xl overflow-hidden mb-6 neon-border border border-brand/10 bg-surface-3/80">
             <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-transparent to-transparent pointer-events-none" />
             <div className="relative px-5 py-4 flex items-center gap-4">
-              <img
-                src="/img/worlds-2026.png"
-                alt="Roundnet World Championship 2026"
-                className="h-12 shrink-0 home-worlds-logo"
-              />
+              <div className="home-worlds-badge h-12 shrink-0 flex items-center justify-center">
+                <img
+                  src="/img/worlds-2026.png"
+                  alt="Roundnet World Championship 2026"
+                  className="h-10 home-worlds-logo"
+                />
+              </div>
               <div className="min-w-0">
                 <div className="font-display font-bold text-sm text-white uppercase tracking-wide">
                   Czech Qualifier
