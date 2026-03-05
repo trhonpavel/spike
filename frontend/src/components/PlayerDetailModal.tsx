@@ -50,60 +50,29 @@ function extractPlayerMatches(rounds: RoundData[], playerId: number): MatchRecor
 }
 
 export default function PlayerDetailModal({ player, slug, onClose }: Props) {
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const { data: rounds = [] } = useQuery({
     queryKey: ['rounds', slug],
     queryFn: () => api.getRounds(slug),
   })
 
-  // Lock body scroll — iOS PWA needs touchmove blocking at document level
+  // Block background scroll — only touch-level blocking works on iOS PWA
   useEffect(() => {
-    const scrollEl = scrollRef.current
-    let startY = 0
+    const sheetEl = sheetRef.current
 
-    // Track touch start position on the scrollable element
-    const onTouchStart = (e: TouchEvent) => {
-      startY = e.touches[0].pageY
-    }
-
-    // Inside the modal: allow scroll but prevent overscroll at boundaries
-    const onScrollElTouchMove = (e: TouchEvent) => {
-      if (!scrollEl) return
-      const currentY = e.touches[0].pageY
-      const { scrollTop, scrollHeight, clientHeight } = scrollEl
-      const atTop = scrollTop <= 0
-      const atBottom = scrollTop + clientHeight >= scrollHeight - 1
-
-      if (scrollHeight <= clientHeight) {
-        // Not scrollable — block
-        e.preventDefault()
-      } else if (atTop && currentY > startY) {
-        // At top, swiping down — block overscroll
-        e.preventDefault()
-      } else if (atBottom && currentY < startY) {
-        // At bottom, swiping up — block overscroll
-        e.preventDefault()
-      }
-      // Otherwise allow natural scroll inside modal
-    }
-
-    // Outside the modal: block everything
-    const onDocTouchMove = (e: TouchEvent) => {
-      if (scrollEl?.contains(e.target as Node)) return
+    const blockBgScroll = (e: TouchEvent) => {
+      // Allow touches inside the modal sheet — let it scroll natively
+      if (sheetEl?.contains(e.target as Node)) return
       e.preventDefault()
     }
 
-    scrollEl?.addEventListener('touchstart', onTouchStart, { passive: true })
-    scrollEl?.addEventListener('touchmove', onScrollElTouchMove, { passive: false })
-    document.addEventListener('touchmove', onDocTouchMove, { passive: false })
+    document.addEventListener('touchmove', blockBgScroll, { passive: false })
     document.body.style.overflow = 'hidden'
     document.documentElement.style.overflow = 'hidden'
 
     return () => {
-      scrollEl?.removeEventListener('touchstart', onTouchStart)
-      scrollEl?.removeEventListener('touchmove', onScrollElTouchMove)
-      document.removeEventListener('touchmove', onDocTouchMove)
+      document.removeEventListener('touchmove', blockBgScroll)
       document.body.style.overflow = ''
       document.documentElement.style.overflow = ''
     }
@@ -116,14 +85,15 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
   const ballRate = player.balls_total > 0 ? Math.round((player.balls_won / player.balls_total) * 100) : 0
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-black/80 anim-fade" onClick={onClose} style={{ touchAction: 'none' }} />
-      <div className="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center" style={{ pointerEvents: 'none' }}>
-        <div
-          ref={scrollRef}
-          className="relative w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl max-h-[88vh] overflow-y-auto overscroll-contain anim-sheet sm:anim-scale"
-          style={{ pointerEvents: 'auto' }}
-        >
+    <div className="fixed inset-0 z-50">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/80 anim-fade" onClick={onClose} />
+
+      {/* Sheet — this is the sole scroll container, no wrappers */}
+      <div
+        ref={sheetRef}
+        className="absolute bottom-0 inset-x-0 mx-auto w-full max-w-md bg-surface-2 border border-border rounded-t-3xl sm:rounded-2xl sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 max-h-[85vh] overflow-y-scroll anim-sheet sm:anim-scale"
+      >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-10 h-1 rounded-full bg-zinc-800" />
@@ -201,7 +171,6 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
         </div>
 
         <div className="h-6" />
-        </div>
       </div>
     </div>
   )
