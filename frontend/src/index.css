@@ -94,8 +94,8 @@ html.light .text-white { color: #1a1a2e; }
 html.light .text-zinc-300 { color: #374151; }
 html.light .text-zinc-400 { color: #4b5563; }
 html.light .text-zinc-500 { color: #6b7280; }
-html.light .text-zinc-600 { color: #9ca3af; }
-html.light .text-zinc-700 { color: #c0c0cc; }
+html.light .text-zinc-600 { color: #4b5563; }
+html.light .text-zinc-700 { color: #374151; }
 html.light .placeholder-zinc-700::placeholder { color: #9ca3af; }
 
 /* Number input spinners */
