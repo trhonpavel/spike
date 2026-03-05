@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { Player, RoundData } from '../api/client'
@@ -60,9 +61,9 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
   const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0
   const ballRate = player.balls_total > 0 ? Math.round((player.balls_won / player.balls_total) * 100) : 0
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] bg-surface overflow-y-auto"
+      className="fixed inset-0 z-50 bg-surface overflow-y-auto"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="max-w-md mx-auto px-5 pt-4 pb-8">
@@ -137,6 +138,7 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
