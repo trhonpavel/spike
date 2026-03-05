@@ -28,8 +28,6 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
       APP_PASSWORD: ${APP_PASSWORD:-}
-      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
-      WEBAUTHN_ORIGIN: ${WEBAUTHN_ORIGIN:-http://localhost:5173}
     depends_on:
       db:
         condition: service_healthy

@@ -6,4 +6,3 @@ alembic==1.14.1
 pydantic==2.10.4
 pydantic-settings==2.7.1
 python-multipart==0.0.20
-webauthn==2.7.0
