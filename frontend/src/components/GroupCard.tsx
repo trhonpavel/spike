@@ -10,19 +10,24 @@ interface Props {
 
 export default function GroupCard({ group, slug, admin, token }: Props) {
   return (
-    <div className="bg-surface-2 rounded-xl border border-border overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-border">
+    <div className="glass-card-strong rounded-2xl overflow-hidden border-l-2 border-l-brand/30">
+      <div className="px-4 py-3 border-b border-border/50">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Group {group.group_index + 1}
-          </h4>
-          <span className="text-[10px] text-zinc-600 font-mono">
+          <div className="flex items-center gap-2.5">
+            <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-brand/10 text-brand text-xs font-bold font-mono">
+              {group.group_index + 1}
+            </span>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+              Group
+            </h4>
+          </div>
+          <span className="text-[10px] text-zinc-600 font-mono truncate ml-3 max-w-[50%] text-right">
             {group.players.map((p) => p.name).join(' / ')}
           </span>
         </div>
       </div>
 
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-border/50">
         {group.matches.map((match) => (
           <MatchScoreInput
             key={match.id}
