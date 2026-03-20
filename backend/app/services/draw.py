@@ -4,6 +4,7 @@ Creates groups of 4 players, optimizes to minimize repeated groupings
 and skill differences within groups.
 """
 
+import asyncio
 import copy
 import random
 import time
@@ -158,8 +159,8 @@ async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
         draw_players[4 * i: 4 * i + 4] for i in range(games_count)
     ]
 
-    # Optimize
-    optimized = _optimize_draw(initial_groups, played_games)
+    # Optimize (CPU-bound — run in thread pool to avoid blocking the event loop)
+    optimized = await asyncio.to_thread(_optimize_draw, initial_groups, played_games)
 
     # Create Round
     new_round = Round(

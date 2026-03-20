@@ -181,6 +181,13 @@ export const api = {
       headers: headers(token),
     }),
 
+  renamePlayer: (slug: string, playerId: number, name: string, token: string) =>
+    request<Player>(`${BASE}/${slug}/players/${playerId}`, {
+      method: 'PATCH',
+      headers: headers(token),
+      body: JSON.stringify({ name }),
+    }),
+
   listRounds: (slug: string) =>
     request<RoundData[]>(`${BASE}/${slug}/rounds`),
 
@@ -206,6 +213,12 @@ export const api = {
       body: JSON.stringify({ score_team1: score1, score_team2: score2 }),
     }),
 
+  deleteRound: (slug: string, roundId: number, token: string) =>
+    request<void>(`${BASE}/${slug}/rounds/${roundId}`, {
+      method: 'DELETE',
+      headers: headers(token),
+    }),
+
   finalizeRound: (slug: string, roundId: number, token: string) =>
     request<RoundData>(`${BASE}/${slug}/rounds/${roundId}/finalize`, {
       method: 'POST',
@@ -223,4 +236,26 @@ export const api = {
 
   getMatchPlayerStats: (slug: string, playerId: number) =>
     request<MatchPlayerStatData[]>(`${BASE}/${slug}/match-player-stats?player_id=${playerId}`),
+
+  bulkAddPlayers: (slug: string, players: { name: string; elo_rating?: number }[], token: string) =>
+    request<Player[]>(`${BASE}/${slug}/players/bulk`, {
+      method: 'POST',
+      headers: headers(token),
+      body: JSON.stringify(players),
+    }),
+
+  exportStandings: async (slug: string, format: 'csv' | 'json' | 'pdf', sortBy: string = 'rating') => {
+    const session = getSessionToken()
+    const h: HeadersInit = {}
+    if (session) h['Authorization'] = `Bearer ${session}`
+    const res = await fetch(`${BASE}/${slug}/export/standings.${format}?sort_by=${sortBy}`, { headers: h })
+    if (!res.ok) throw new Error(`Export failed: HTTP ${res.status}`)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${slug}-standings.${format}`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
 }

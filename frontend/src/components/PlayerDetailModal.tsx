@@ -183,6 +183,58 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
           </div>
         )}
 
+        {/* Elo progression chart */}
+        {matchStats && matchStats.length > 0 && (() => {
+          const eloPoints = [matchStats[0].elo_before, ...matchStats.map((m) => m.elo_after)]
+          const minY = Math.min(...eloPoints) - 20
+          const maxY = Math.max(...eloPoints) + 20
+          const range = maxY - minY || 40
+          const W = 280
+          const H = 64
+          const toX = (i: number) => (i / (eloPoints.length - 1)) * W
+          const toY = (v: number) => ((maxY - v) / range) * H
+          const baseline1500 = toY(1500)
+          const pts = eloPoints.map((v, i) => `${toX(i)},${toY(v)}`).join(' ')
+          return (
+            <div className="bg-surface-2 rounded-2xl border border-border p-4 mb-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">Elo Progression</span>
+                <span className="score-num text-sm text-blue-400">{player.elo_rating.toFixed(0)}</span>
+              </div>
+              <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 64 }}>
+                {/* Baseline 1500 */}
+                {baseline1500 >= 0 && baseline1500 <= H && (
+                  <line
+                    x1={0} y1={baseline1500} x2={W} y2={baseline1500}
+                    stroke="#3f3f46" strokeWidth="1" strokeDasharray="4 4"
+                  />
+                )}
+                {/* Line */}
+                <polyline
+                  points={pts}
+                  fill="none"
+                  stroke="#60a5fa"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+                {/* Match dots (skip first = elo_before baseline) */}
+                {matchStats.map((ms, i) => {
+                  const x = toX(i + 1)
+                  const y = toY(ms.elo_after)
+                  return (
+                    <circle
+                      key={ms.id}
+                      cx={x} cy={y} r={3}
+                      fill={ms.won ? '#22c55e' : '#ef4444'}
+                    />
+                  )
+                })}
+              </svg>
+            </div>
+          )
+        })()}
+
         {/* Partner synergy */}
         {partnerSynergy.length > 0 && (
           <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden mb-5">

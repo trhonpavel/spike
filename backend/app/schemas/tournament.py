@@ -26,6 +26,16 @@ class TournamentPublic(BaseModel):
 
 class PlayerCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
+    elo_rating: float | None = None  # None = auto (avg if mid-tournament, else 1500)
+
+
+class PlayerUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+
+
+class PlayerBulkCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    elo_rating: float = 1500.0
 
 
 class PlayerOut(BaseModel):

@@ -2,7 +2,7 @@ import re
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Query
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -14,7 +14,7 @@ from app.models.tournament import (
 )
 from app.schemas.tournament import (
     TournamentCreate, TournamentOut, TournamentPublic,
-    PlayerCreate, PlayerOut,
+    PlayerCreate, PlayerUpdate, PlayerBulkCreate, PlayerOut,
     RoundOut, GroupOut, MatchOut,
     ScoreUpdate, StandingOut,
     PartnerStatOut, PlayerStatsOut,
@@ -149,8 +149,54 @@ async def add_player(
     if existing.scalar_one_or_none():
         raise HTTPException(409, f"Player '{data.name}' already exists")
 
-    player = Player(tournament_id=t.id, name=data.name)
+    # Determine starting Elo (Feature 11: fair mid-tournament join)
+    starting_elo = data.elo_rating
+    if starting_elo is None:
+        fin_result = await db.execute(
+            select(func.count(Round.id)).where(
+                Round.tournament_id == t.id, Round.status == RoundStatus.finalized
+            )
+        )
+        finalized_count = fin_result.scalar() or 0
+        if finalized_count > 0:
+            avg_result = await db.execute(
+                select(func.avg(Player.elo_rating)).where(Player.tournament_id == t.id)
+            )
+            avg = avg_result.scalar()
+            starting_elo = round(avg, 2) if avg else 1500.0
+        else:
+            starting_elo = 1500.0
+
+    player = Player(tournament_id=t.id, name=data.name, elo_rating=starting_elo)
     db.add(player)
+    await db.commit()
+    await db.refresh(player)
+    return player
+
+
+@router.patch("/{slug}/players/{player_id}", response_model=PlayerOut)
+async def rename_player(
+    slug: str,
+    player_id: int,
+    data: PlayerUpdate,
+    db: AsyncSession = Depends(get_db),
+    x_admin_token: str | None = Header(None),
+):
+    t = await _get_tournament(db, slug)
+    _verify_admin(t, x_admin_token)
+    player = await db.get(Player, player_id)
+    if not player or player.tournament_id != t.id:
+        raise HTTPException(404, "Player not found")
+    dup = await db.execute(
+        select(Player).where(
+            Player.tournament_id == t.id,
+            Player.name == data.name,
+            Player.id != player_id,
+        )
+    )
+    if dup.scalar_one_or_none():
+        raise HTTPException(409, f"Player '{data.name}' already exists")
+    player.name = data.name
     await db.commit()
     await db.refresh(player)
     return player
@@ -175,6 +221,43 @@ async def remove_player(
 
     await db.delete(player)
     await db.commit()
+
+
+@router.post("/{slug}/players/bulk", response_model=list[PlayerOut], status_code=201)
+async def bulk_add_players(
+    slug: str,
+    data: list[PlayerBulkCreate],
+    db: AsyncSession = Depends(get_db),
+    x_admin_token: str | None = Header(None),
+):
+    t = await _get_tournament(db, slug)
+    _verify_admin(t, x_admin_token)
+
+    # Get existing names
+    result = await db.execute(
+        select(Player.name).where(Player.tournament_id == t.id)
+    )
+    existing_names = {row[0].lower() for row in result.all()}
+
+    created = []
+    seen = set()
+    for item in data:
+        name_lower = item.name.strip().lower()
+        if name_lower in existing_names or name_lower in seen:
+            continue
+        seen.add(name_lower)
+        player = Player(
+            tournament_id=t.id,
+            name=item.name.strip(),
+            elo_rating=item.elo_rating,
+        )
+        db.add(player)
+        created.append(player)
+
+    await db.commit()
+    for p in created:
+        await db.refresh(p)
+    return created
 
 
 # --- Rounds & Draw ---
@@ -214,6 +297,24 @@ async def draw_round(
         raise HTTPException(400, str(e))
     await manager.broadcast(slug, "round_drawn")
     return _build_round_out(new_round)
+
+
+@router.delete("/{slug}/rounds/{round_id}", status_code=204)
+async def delete_round(
+    slug: str,
+    round_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_admin_token: str | None = Header(None),
+):
+    t = await _get_tournament(db, slug)
+    _verify_admin(t, x_admin_token)
+    round_obj = await db.get(Round, round_id)
+    if not round_obj or round_obj.tournament_id != t.id:
+        raise HTTPException(404, "Round not found")
+    if round_obj.status == RoundStatus.finalized:
+        raise HTTPException(400, "Cannot delete finalized round")
+    await db.delete(round_obj)
+    await db.commit()
 
 
 @router.post("/{slug}/rounds/{round_id}/confirm", response_model=RoundOut)

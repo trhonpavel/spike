@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { RoundData } from '../api/client'
 import GroupCard from './GroupCard'
+import ConfirmDialog from './ConfirmDialog'
+import { SkeletonCard } from './Skeleton'
 
 interface Props {
   slug: string
@@ -9,8 +12,19 @@ interface Props {
   token: string | null
 }
 
+const totalMatches = (r: RoundData) =>
+  r.groups.reduce((s, g) => s + g.matches.length, 0)
+
+const doneMatches = (r: RoundData) =>
+  r.groups.reduce(
+    (s, g) => s + g.matches.filter((m) => m.score_team1 !== null).length,
+    0,
+  )
+
 export default function RoundsTab({ slug, admin, token }: Props) {
   const queryClient = useQueryClient()
+  const [finalizeTarget, setFinalizeTarget] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
 
   const { data: rounds = [], isLoading } = useQuery({
     queryKey: ['rounds', slug],
@@ -34,6 +48,11 @@ export default function RoundsTab({ slug, admin, token }: Props) {
       queryClient.invalidateQueries({ queryKey: ['standings', slug] })
       queryClient.invalidateQueries({ queryKey: ['players', slug] })
     },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (roundId: number) => api.deleteRound(slug, roundId, token!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rounds', slug] }),
   })
 
   const canDraw = rounds.every((r: RoundData) => r.status === 'finalized')
@@ -74,28 +93,49 @@ export default function RoundsTab({ slug, admin, token }: Props) {
       )}
 
       {isLoading && (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full anim-spin" />
+        <div className="space-y-4">
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
       )}
 
       {/* Rounds */}
       {[...rounds].reverse().map((round: RoundData) => {
         const st = statusConfig(round.status)
+        const total = totalMatches(round)
+        const done = doneMatches(round)
         return (
-          <div key={round.id} className="space-y-3">
+          <div key={round.id} className="space-y-3 anim-tab-enter">
             {/* Round header */}
             <div className="flex items-center gap-3">
               <span className="score-num text-3xl text-white">{round.round_number}</span>
-              <div>
+              <div className="flex-1">
                 <span className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">Round</span>
-                <div className="mt-0.5">
+                <div className="mt-0.5 flex items-center gap-2">
                   <span className={`inline-flex items-center gap-1 font-display text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${st.bg} ${st.color} ${st.border}`}>
                     {round.status === 'confirmed' && <span className="w-1.5 h-1.5 rounded-full bg-accent-blue anim-live" />}
                     {st.text}
                   </span>
+                  {round.status !== 'finalized' && (
+                    <span className={`font-display text-[10px] font-bold tabular-nums ${done === total ? 'text-qualify' : done > 0 ? 'text-accent-blue' : 'text-zinc-700'}`}>
+                      {done}/{total}
+                    </span>
+                  )}
                 </div>
               </div>
+              {/* Delete button for non-finalized rounds */}
+              {admin && round.status !== 'finalized' && (
+                <button
+                  onClick={() => setDeleteTarget(round.id)}
+                  disabled={deleteMutation.isPending}
+                  className="p-2 text-zinc-700 hover:text-accent-red transition-colors cursor-pointer disabled:opacity-30"
+                  aria-label={`Delete round ${round.round_number}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
             </div>
 
             {/* Sitting out */}
@@ -119,9 +159,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
 
             {admin && round.status === 'confirmed' && allScoresEntered(round) && (
               <button
-                onClick={() => {
-                  if (confirm('Finalize this round? Stats will update.')) finalizeMutation.mutate(round.id)
-                }}
+                onClick={() => setFinalizeTarget(round.id)}
                 disabled={finalizeMutation.isPending}
                 className="w-full py-3 border border-qualify/30 text-qualify font-display font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-qualify/10 transition-all cursor-pointer disabled:opacity-30"
               >
@@ -153,6 +191,32 @@ export default function RoundsTab({ slug, admin, token }: Props) {
           {admin && <p className="text-zinc-700 text-sm">Draw the first round to begin</p>}
         </div>
       )}
+
+      <ConfirmDialog
+        open={finalizeTarget !== null}
+        title="Finalize Round?"
+        description="This will process all scores and update player statistics. This cannot be undone."
+        confirmLabel="Finalize"
+        variant="warning"
+        onConfirm={() => {
+          if (finalizeTarget !== null) finalizeMutation.mutate(finalizeTarget)
+          setFinalizeTarget(null)
+        }}
+        onCancel={() => setFinalizeTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Round?"
+        description="This will remove the round and all its matches. This cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={() => {
+          if (deleteTarget !== null) deleteMutation.mutate(deleteTarget)
+          setDeleteTarget(null)
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }
