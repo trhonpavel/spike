@@ -21,6 +21,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:5432/${POSTGRES_DB}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
       APP_PASSWORD: ${APP_PASSWORD:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy
