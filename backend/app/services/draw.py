@@ -176,6 +176,7 @@ async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
         db.add(RoundWaiting(round_id=new_round.id, player_id=wp.id))
 
     # Create groups and matches
+    matches_per_group = min(max(getattr(tournament, 'matches_per_group', 3), 1), 3)
     for idx, group_players in enumerate(optimized):
         group = Group(
             round_id=new_round.id,
@@ -188,7 +189,7 @@ async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
         db.add(group)
         await db.flush()
 
-        for mi, (t1p1, t1p2, t2p1, t2p2) in enumerate(MATCH_TABLE):
+        for mi, (t1p1, t1p2, t2p1, t2p2) in enumerate(MATCH_TABLE[:matches_per_group]):
             match = Match(
                 group_id=group.id,
                 match_index=mi,

@@ -188,12 +188,14 @@ async def create_session(
             break
         t_slug = f"{base_slug}-{i}"
 
+    matches_per_group = max(1, min(3, data.matches_per_group))
     tournament = Tournament(
         name=f"{league.name} – {date_str}",
         slug=t_slug,
         admin_token=league.admin_token,
         league_id=league.id,
         session_date=session_date,
+        matches_per_group=matches_per_group,
     )
     db.add(tournament)
     await db.flush()

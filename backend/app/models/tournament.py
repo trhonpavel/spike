@@ -33,6 +33,7 @@ class Tournament(Base):
     )
     league_id: Mapped[int | None] = mapped_column(ForeignKey("leagues.id"), nullable=True, default=None)
     session_date: Mapped[date | None] = mapped_column(Date, nullable=True, default=None)
+    matches_per_group: Mapped[int] = mapped_column(Integer, default=3)
 
     players: Mapped[list["Player"]] = relationship(back_populates="tournament", cascade="all, delete-orphan")
     rounds: Mapped[list["Round"]] = relationship(back_populates="tournament", cascade="all, delete-orphan")

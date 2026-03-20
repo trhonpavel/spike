@@ -34,6 +34,7 @@ class LeaguePlayerOut(BaseModel):
 class LeagueSessionCreate(BaseModel):
     session_date: date | None = None
     attending_player_ids: list[int]
+    matches_per_group: int = 1  # 1 = quick rotation, 3 = full round-robin
 
 
 class LeagueSessionOut(BaseModel):

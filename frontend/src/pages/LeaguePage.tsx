@@ -27,6 +27,7 @@ export default function LeaguePage() {
   const [showNewSession, setShowNewSession] = useState(false)
   const [sessionDate, setSessionDate] = useState(new Date().toISOString().slice(0, 10))
   const [attendingIds, setAttendingIds] = useState<Set<number>>(new Set())
+  const [matchesPerGroup, setMatchesPerGroup] = useState(1)
   const [showAddPlayer, setShowAddPlayer] = useState(false)
   const [newPlayerName, setNewPlayerName] = useState('')
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null)
@@ -68,6 +69,7 @@ export default function LeaguePage() {
       leagueApi.createSession(slug!, {
         session_date: sessionDate,
         attending_player_ids: Array.from(attendingIds),
+        matches_per_group: matchesPerGroup,
       }, token),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['league', slug] })
@@ -345,6 +347,32 @@ export default function LeaguePage() {
             </div>
 
             <div>
+              <label className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 block mb-1.5">
+                Formát kola
+              </label>
+              <div className="flex gap-2">
+                {[
+                  { value: 1, label: '1 zápas', sub: 'rychlá rotace' },
+                  { value: 2, label: '2 zápasy', sub: 'střední' },
+                  { value: 3, label: '3 zápasy', sub: 'round-robin' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setMatchesPerGroup(opt.value)}
+                    className={`flex-1 py-2 px-1 rounded-xl border text-center transition-all cursor-pointer ${
+                      matchesPerGroup === opt.value
+                        ? 'border-brand/40 bg-brand/5 text-white'
+                        : 'border-border text-zinc-500 hover:border-border-bright'
+                    }`}
+                  >
+                    <div className="font-display text-xs font-bold">{opt.label}</div>
+                    <div className="text-[10px] text-zinc-600 mt-0.5">{opt.sub}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">
                   Kdo přišel ({attendingIds.size}/{activePlayers.length})
@@ -436,6 +464,7 @@ export default function LeaguePage() {
                 onClick={() => {
                   setAttendingIds(new Set(activePlayers.map(p => p.id)))
                   setSessionDate(new Date().toISOString().slice(0, 10))
+                  setMatchesPerGroup(1)
                   setFormError('')
                   setShowNewSession(true)
                 }}
