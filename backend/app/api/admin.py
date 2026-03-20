@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_db
 from app.models.tournament import Tournament, TournamentStatus, Player, Round
+from app.models.league import League, LeaguePlayer
 from app.schemas.admin import (
     AdminLoginRequest, AdminLoginResponse,
     TournamentListItem, ServerStatus,
@@ -119,6 +120,53 @@ async def finish_tournament(
     t.status = TournamentStatus.finished
     await db.commit()
     return {"status": "finished"}
+
+
+@router.get("/leagues")
+async def list_leagues(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    _require_admin(request)
+    result = await db.execute(
+        select(
+            League.id,
+            League.name,
+            League.slug,
+            League.status,
+            League.created_at,
+            func.count(func.distinct(LeaguePlayer.id)).label("player_count"),
+        )
+        .outerjoin(LeaguePlayer, LeaguePlayer.league_id == League.id)
+        .group_by(League.id)
+        .order_by(League.id.desc())
+    )
+    return [
+        {
+            "id": r.id,
+            "name": r.name,
+            "slug": r.slug,
+            "status": r.status,
+            "player_count": r.player_count,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in result.all()
+    ]
+
+
+@router.delete("/leagues/{league_id}", status_code=204)
+async def delete_league(
+    league_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    _require_admin(request)
+    result = await db.execute(select(League).where(League.id == league_id))
+    league = result.scalar_one_or_none()
+    if not league:
+        raise HTTPException(404, "League not found")
+    await db.delete(league)
+    await db.commit()
 
 
 @router.get("/status", response_model=ServerStatus)

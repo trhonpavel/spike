@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi, getAdminToken, clearAdminToken, type TournamentListItem } from '../api/admin-client'
+import { adminApi, getAdminToken, clearAdminToken, type TournamentListItem, type LeagueListItem } from '../api/admin-client'
 import { useTheme } from '../hooks/useTheme'
 import ConfirmDialog from '../components/ConfirmDialog'
 
@@ -50,6 +50,17 @@ export default function AdminPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => adminApi.deleteTournament(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-tournaments'] }),
+  })
+
+  const { data: leagues = [], isLoading: leaguesLoading } = useQuery({
+    queryKey: ['admin-leagues'],
+    queryFn: () => adminApi.listLeagues(),
+    enabled: authed,
+  })
+
+  const deleteLeagueMutation = useMutation({
+    mutationFn: (id: number) => adminApi.deleteLeague(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-leagues'] }),
   })
 
   const finishMutation = useMutation({
@@ -242,6 +253,55 @@ export default function AdminPage() {
                 </div>
               )
             })}
+          </div>
+        </div>
+        {/* Leagues list */}
+        <div>
+          <h2 className="font-display font-bold text-xs uppercase tracking-widest text-zinc-500 mb-3">
+            Leagues
+          </h2>
+
+          {leaguesLoading && (
+            <div className="flex justify-center py-8">
+              <div className="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full anim-spin" />
+            </div>
+          )}
+
+          {!leaguesLoading && leagues.length === 0 && (
+            <div className="text-center py-8 text-zinc-600 text-sm">No leagues yet</div>
+          )}
+
+          <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden divide-y divide-border">
+            {leagues.map((l: LeagueListItem) => (
+              <div key={l.id} className="px-4 py-3 flex items-center gap-3">
+                <Link to={`/l/${l.slug}`} className="flex-1 min-w-0 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-white truncate">{l.name}</span>
+                    <span className={`inline-flex font-display text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${l.status === 'finished' ? 'text-qualify bg-qualify/10 border-qualify/20' : 'text-accent-blue bg-accent-blue/10 border-accent-blue/20'}`}>
+                      {l.status === 'finished' ? 'Done' : 'Active'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-zinc-600">
+                    <span>{l.player_count}P</span>
+                    <span className="text-zinc-700">{l.slug}</span>
+                  </div>
+                </Link>
+                <button
+                  onClick={() => setConfirmAction({
+                    title: 'Delete League?',
+                    description: `Permanently delete "${l.name}" and all its data. This cannot be undone.`,
+                    variant: 'danger',
+                    onConfirm: () => deleteLeagueMutation.mutate(l.id),
+                  })}
+                  className="p-2 text-zinc-600 hover:text-accent-red transition-colors cursor-pointer"
+                  title="Delete league"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       </main>

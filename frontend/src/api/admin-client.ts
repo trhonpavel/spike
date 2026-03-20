@@ -43,6 +43,15 @@ export interface TournamentListItem {
   created_at: string | null
 }
 
+export interface LeagueListItem {
+  id: number
+  name: string
+  slug: string
+  status: string
+  player_count: number
+  created_at: string | null
+}
+
 export interface ServerStatus {
   db_ok: boolean
   tournaments_count: number
@@ -68,6 +77,12 @@ export const adminApi = {
 
   finishTournament: (id: number) =>
     adminRequest<{ status: string }>(`/api/admin/tournaments/${id}/finish`, { method: 'POST' }),
+
+  listLeagues: () =>
+    adminRequest<LeagueListItem[]>('/api/admin/leagues'),
+
+  deleteLeague: (id: number) =>
+    adminRequest<void>(`/api/admin/leagues/${id}`, { method: 'DELETE' }),
 
   getServerStatus: () =>
     adminRequest<ServerStatus>('/api/admin/status'),
