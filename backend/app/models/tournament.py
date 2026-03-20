@@ -26,7 +26,7 @@ class Tournament(Base):
     slug: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     admin_token: Mapped[str] = mapped_column(String(36), default=lambda: str(uuid.uuid4()))
     status: Mapped[TournamentStatus] = mapped_column(
-        SAEnum(TournamentStatus), default=TournamentStatus.active
+        SAEnum(TournamentStatus, native_enum=False), default=TournamentStatus.active
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -66,7 +66,7 @@ class Round(Base):
     tournament_id: Mapped[int] = mapped_column(ForeignKey("tournaments.id"))
     round_number: Mapped[int] = mapped_column(Integer)
     status: Mapped[RoundStatus] = mapped_column(
-        SAEnum(RoundStatus), default=RoundStatus.drawn
+        SAEnum(RoundStatus, native_enum=False), default=RoundStatus.drawn
     )
 
     tournament: Mapped["Tournament"] = relationship(back_populates="rounds")
