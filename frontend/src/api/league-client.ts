@@ -88,9 +88,9 @@ export const leagueApi = {
       body: JSON.stringify({ name }),
     }),
 
-  list: () => request<League[]>(BASE),
+  list: () => request<League[]>(BASE, { headers: headers() }),
 
-  get: (slug: string) => request<LeagueDetail>(`${BASE}/${slug}`),
+  get: (slug: string) => request<LeagueDetail>(`${BASE}/${slug}`, { headers: headers() }),
 
   addPlayer: (slug: string, name: string, token: string) =>
     request<LeaguePlayer>(`${BASE}/${slug}/players`, {
