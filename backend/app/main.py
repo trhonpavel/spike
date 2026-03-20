@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import traceback
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -8,6 +10,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from starlette.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 from app.config import settings
 from app.database import engine, get_db
@@ -64,6 +68,12 @@ async def auth_middleware(request: Request, call_next):
             return await call_next(request)
 
     return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled exception on %s %s:\n%s", request.method, request.url.path, traceback.format_exc())
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 
 app.include_router(auth_router)
