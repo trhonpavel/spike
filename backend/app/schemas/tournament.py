@@ -20,6 +20,7 @@ class TournamentPublic(BaseModel):
     name: str
     slug: str
     status: str
+    league_slug: str | None = None
 
     model_config = {"from_attributes": True}
 

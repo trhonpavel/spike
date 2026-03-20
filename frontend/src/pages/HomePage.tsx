@@ -2,13 +2,17 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { setAdminToken } from '../hooks/useAdminToken'
+import { leagueApi, setLeagueToken } from '../api/league-client'
 import { useTheme } from '../hooks/useTheme'
 
 export default function HomePage() {
   const [name, setName] = useState('')
+  const [leagueName, setLeagueName] = useState('')
   const [slug, setSlug] = useState('')
   const [loading, setLoading] = useState(false)
+  const [leagueLoading, setLeagueLoading] = useState(false)
   const [error, setError] = useState('')
+  const [leagueError, setLeagueError] = useState('')
   const navigate = useNavigate()
   const { theme, toggle: toggleTheme } = useTheme()
 
@@ -28,9 +32,32 @@ export default function HomePage() {
     }
   }
 
+  const handleCreateLeague = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!leagueName.trim()) return
+    setLeagueLoading(true)
+    setLeagueError('')
+    try {
+      const l = await leagueApi.create(leagueName.trim())
+      if (l.admin_token) setLeagueToken(l.slug, l.admin_token)
+      navigate(`/l/${l.slug}`)
+    } catch (err: any) {
+      setLeagueError(err.message)
+    } finally {
+      setLeagueLoading(false)
+    }
+  }
+
   const handleOpen = (e: React.FormEvent) => {
     e.preventDefault()
-    const s = slug.trim().replace(/^.*\/t\//, '').replace(/\/.*$/, '')
+    const raw = slug.trim()
+    // Support l/slug or /l/slug for leagues
+    const leagueMatch = raw.match(/(?:^|\/)l\/([^/]+)/)
+    if (leagueMatch) {
+      navigate(`/l/${leagueMatch[1]}`)
+      return
+    }
+    const s = raw.replace(/^.*\/t\//, '').replace(/\/.*$/, '')
     if (s) navigate(`/t/${s}`)
   }
 
@@ -112,6 +139,36 @@ export default function HomePage() {
             </form>
           </div>
 
+          {/* Create league */}
+          <div className="bg-surface-2 border border-border rounded-2xl p-5 mb-3">
+            <h2 className="font-display font-bold text-xs uppercase tracking-widest text-zinc-500 mb-3">
+              New League
+            </h2>
+            <form onSubmit={handleCreateLeague} className="space-y-3">
+              <input
+                type="text"
+                value={leagueName}
+                onChange={(e) => setLeagueName(e.target.value)}
+                placeholder="League name"
+                className="w-full px-4 py-3.5 bg-surface-3 border border-border rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:border-brand/50 focus:shadow-[0_0_20px_rgba(228,255,26,0.08)] transition-all text-base"
+                maxLength={200}
+              />
+              {leagueError && <p className="text-accent-red text-sm font-medium anim-fade">{leagueError}</p>}
+              <button
+                type="submit"
+                disabled={leagueLoading || !leagueName.trim()}
+                className="w-full py-3.5 rounded-xl text-sm font-display font-bold uppercase tracking-wider border border-brand/30 text-brand hover:bg-brand/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                {leagueLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-brand/20 border-t-brand rounded-full anim-spin" />
+                    Creating
+                  </span>
+                ) : 'Create League'}
+              </button>
+            </form>
+          </div>
+
           {/* Open existing */}
           <div className="bg-surface-2 border border-border rounded-2xl p-5 mb-6">
             <h2 className="font-display font-bold text-xs uppercase tracking-widest text-zinc-500 mb-3">
@@ -135,9 +192,15 @@ export default function HomePage() {
             </form>
           </div>
 
-          <p className="text-center text-xs text-zinc-700">
-            Share the link so players can follow live
-          </p>
+          <div className="flex items-center justify-center gap-4">
+            <p className="text-xs text-zinc-700">
+              Share the link so players can follow live
+            </p>
+            <span className="text-zinc-800">|</span>
+            <a href="/tournaments" onClick={(e) => { e.preventDefault(); navigate('/tournaments') }} className="text-xs text-zinc-600 hover:text-brand transition-colors">
+              Browse All
+            </a>
+          </div>
         </div>
       </div>
 

@@ -42,6 +42,7 @@ export interface Tournament {
   slug: string
   status: string
   admin_token?: string
+  league_slug?: string
 }
 
 export interface Player {

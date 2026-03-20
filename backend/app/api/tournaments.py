@@ -117,7 +117,13 @@ async def create_tournament(data: TournamentCreate, db: AsyncSession = Depends(g
 
 @router.get("/{slug}", response_model=TournamentPublic)
 async def get_tournament(slug: str, db: AsyncSession = Depends(get_db)):
-    return await _get_tournament(db, slug)
+    t = await _get_tournament(db, slug)
+    league_slug = None
+    if t.league_id:
+        from app.models.league import League
+        lg = await db.get(League, t.league_id)
+        league_slug = lg.slug if lg else None
+    return TournamentPublic(id=t.id, name=t.name, slug=t.slug, status=t.status, league_slug=league_slug)
 
 
 # --- Players ---

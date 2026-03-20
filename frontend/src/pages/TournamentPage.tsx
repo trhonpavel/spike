@@ -6,10 +6,14 @@ import { getAdminToken, isAdmin } from '../hooks/useAdminToken'
 import { getSessionToken } from '../api/client'
 import { useLiveUpdates } from '../hooks/useLiveUpdates'
 import { useTheme } from '../hooks/useTheme'
+import { useOffline } from '../hooks/useOffline'
+import { useOfflineQueue } from '../hooks/useOfflineQueue'
+import { usePushNotifications } from '../hooks/usePushNotifications'
 import OverviewTab from '../components/OverviewTab'
 import PlayersTab from '../components/PlayersTab'
 import RoundsTab from '../components/RoundsTab'
 import StandingsTable from '../components/StandingsTable'
+import OfflineBanner from '../components/OfflineBanner'
 
 type Tab = 'overview' | 'players' | 'rounds' | 'standings'
 
@@ -30,6 +34,9 @@ export default function TournamentPage() {
   const token = slug ? getAdminToken(slug) : null
   const { theme, toggle: toggleTheme } = useTheme()
 
+  const isOffline = useOffline()
+  const { syncing, pending } = useOfflineQueue()
+
   const { data: tournament } = useQuery({
     queryKey: ['tournament', slug],
     queryFn: () => api.getTournament(slug!),
@@ -42,10 +49,13 @@ export default function TournamentPage() {
     enabled: !!slug,
   })
 
-  useLiveUpdates(slug!, (_event) => {
+  const { notify } = usePushNotifications(tournament?.name)
+
+  useLiveUpdates(slug!, (event) => {
     queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
     queryClient.invalidateQueries({ queryKey: ['standings', slug] })
     queryClient.invalidateQueries({ queryKey: ['players', slug] })
+    notify(event)
   })
 
   useEffect(() => {
@@ -73,6 +83,8 @@ export default function TournamentPage() {
 
   return (
     <div className="min-h-screen pb-24 sm:pb-0">
+      {isOffline && <OfflineBanner syncing={syncing} pending={pending} />}
+
       {/* Header */}
       <header className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-border"
               style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
@@ -82,6 +94,14 @@ export default function TournamentPage() {
               Spike
             </Link>
             <div className="min-w-0 flex-1">
+              {tournament?.league_slug && (
+                <Link
+                  to={`/l/${tournament.league_slug}`}
+                  className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-brand transition-colors"
+                >
+                  ← Liga
+                </Link>
+              )}
               <h1 className="font-display text-base font-bold text-white uppercase tracking-wide truncate">
                 {tournament?.name || slug}
               </h1>
@@ -171,11 +191,13 @@ export default function TournamentPage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-4 py-4 anim-fade">
-        {tab === 'overview' && <OverviewTab slug={slug} admin={admin} token={token} onSwitchTab={(t) => setTab(t as Tab)} />}
-        {tab === 'players' && <PlayersTab slug={slug} admin={admin} token={token} />}
-        {tab === 'rounds' && <RoundsTab slug={slug} admin={admin} token={token} />}
-        {tab === 'standings' && <StandingsTable slug={slug} />}
+      <main className="max-w-2xl mx-auto px-4 py-4">
+        <div key={tab} className="anim-tab-enter">
+          {tab === 'overview' && <OverviewTab slug={slug} admin={admin} token={token} onSwitchTab={(t) => setTab(t as Tab)} />}
+          {tab === 'players' && <PlayersTab slug={slug} admin={admin} token={token} />}
+          {tab === 'rounds' && <RoundsTab slug={slug} admin={admin} token={token} />}
+          {tab === 'standings' && <StandingsTable slug={slug} />}
+        </div>
       </main>
 
       {/* Mobile bottom navigation */}

@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse
 from app.config import settings
 from app.database import engine, get_db
 from app.api.tournaments import router as tournaments_router
+from app.api.leagues import router as leagues_router
 from app.api.websocket import router as ws_router
 from app.api.auth import router as auth_router, validate_token
 from app.api.admin import router as admin_router, validate_admin_token
@@ -68,6 +69,7 @@ async def auth_middleware(request: Request, call_next):
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(tournaments_router)
+app.include_router(leagues_router)
 app.include_router(export_router)
 app.include_router(ws_router)
 

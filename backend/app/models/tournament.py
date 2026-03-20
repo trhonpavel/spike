@@ -1,5 +1,6 @@
 import uuid
-from sqlalchemy import String, Integer, Float, Boolean, ForeignKey, Enum as SAEnum, UniqueConstraint
+from datetime import date, datetime, timezone
+from sqlalchemy import String, Integer, Float, Boolean, ForeignKey, Enum as SAEnum, UniqueConstraint, DateTime, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
 
@@ -27,6 +28,11 @@ class Tournament(Base):
     status: Mapped[TournamentStatus] = mapped_column(
         SAEnum(TournamentStatus), default=TournamentStatus.active
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    league_id: Mapped[int | None] = mapped_column(ForeignKey("leagues.id"), nullable=True, default=None)
+    session_date: Mapped[date | None] = mapped_column(Date, nullable=True, default=None)
 
     players: Mapped[list["Player"]] = relationship(back_populates="tournament", cascade="all, delete-orphan")
     rounds: Mapped[list["Round"]] = relationship(back_populates="tournament", cascade="all, delete-orphan")
@@ -47,6 +53,7 @@ class Player(Base):
     point_differential: Mapped[int] = mapped_column(Integer, default=0)
     games_played: Mapped[int] = mapped_column(Integer, default=0)
     losses: Mapped[int] = mapped_column(Integer, default=0)
+    league_player_id: Mapped[int | None] = mapped_column(ForeignKey("league_players.id"), nullable=True, default=None)
 
     tournament: Mapped["Tournament"] = relationship(back_populates="players")
 
