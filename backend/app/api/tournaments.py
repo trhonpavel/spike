@@ -181,7 +181,7 @@ async def add_player(
 
 
 @router.patch("/{slug}/players/{player_id}", response_model=PlayerOut)
-async def rename_player(
+async def update_player(
     slug: str,
     player_id: int,
     data: PlayerUpdate,
@@ -193,16 +193,19 @@ async def rename_player(
     player = await db.get(Player, player_id)
     if not player or player.tournament_id != t.id:
         raise HTTPException(404, "Player not found")
-    dup = await db.execute(
-        select(Player).where(
-            Player.tournament_id == t.id,
-            Player.name == data.name,
-            Player.id != player_id,
+    if data.name is not None:
+        dup = await db.execute(
+            select(Player).where(
+                Player.tournament_id == t.id,
+                Player.name == data.name,
+                Player.id != player_id,
+            )
         )
-    )
-    if dup.scalar_one_or_none():
-        raise HTTPException(409, f"Player '{data.name}' already exists")
-    player.name = data.name
+        if dup.scalar_one_or_none():
+            raise HTTPException(409, f"Player '{data.name}' already exists")
+        player.name = data.name
+    if data.active is not None:
+        player.active = data.active
     await db.commit()
     await db.refresh(player)
     return player
@@ -225,8 +228,13 @@ async def remove_player(
     if not player:
         raise HTTPException(404, "Player not found")
 
-    await db.delete(player)
-    await db.commit()
+    if player.games_played > 0:
+        # Player has match history — soft delete to preserve stats and league sync
+        player.active = False
+        await db.commit()
+    else:
+        await db.delete(player)
+        await db.commit()
 
 
 @router.post("/{slug}/players/bulk", response_model=list[PlayerOut], status_code=201)

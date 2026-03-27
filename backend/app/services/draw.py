@@ -119,7 +119,7 @@ def _optimize_draw(
 async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
     """Perform a round draw for a tournament. Returns the new Round."""
     result = await db.execute(
-        select(Player).where(Player.tournament_id == tournament.id)
+        select(Player).where(Player.tournament_id == tournament.id, Player.active == True)
     )
     players = list(result.scalars().all())
 

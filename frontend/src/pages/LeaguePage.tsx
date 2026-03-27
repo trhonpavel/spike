@@ -445,7 +445,7 @@ export default function LeaguePage() {
   ]
 
   return (
-    <div className="min-h-screen pb-24" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+    <div className="min-h-screen pb-24">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-border"
               style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>

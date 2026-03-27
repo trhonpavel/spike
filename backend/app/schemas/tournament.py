@@ -31,7 +31,8 @@ class PlayerCreate(BaseModel):
 
 
 class PlayerUpdate(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    active: bool | None = None
 
 
 class PlayerBulkCreate(BaseModel):
@@ -51,6 +52,7 @@ class PlayerOut(BaseModel):
     point_differential: int = 0
     games_played: int = 0
     losses: int = 0
+    active: bool = True
 
     model_config = {"from_attributes": True}
 

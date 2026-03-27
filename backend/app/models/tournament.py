@@ -55,6 +55,7 @@ class Player(Base):
     games_played: Mapped[int] = mapped_column(Integer, default=0)
     losses: Mapped[int] = mapped_column(Integer, default=0)
     league_player_id: Mapped[int | None] = mapped_column(ForeignKey("league_players.id"), nullable=True, default=None)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     tournament: Mapped["Tournament"] = relationship(back_populates="players")
 

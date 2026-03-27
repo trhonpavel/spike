@@ -53,6 +53,14 @@ export default function PlayersTab({ slug, admin, token }: Props) {
     },
   })
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, active }: { id: number; active: boolean }) =>
+      api.setPlayerActive(slug, id, active, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', slug] })
+    },
+  })
+
   const renameMutation = useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) =>
       api.renamePlayer(slug, id, name, token!),
@@ -202,6 +210,13 @@ export default function PlayersTab({ slug, admin, token }: Props) {
         </p>
       )}
 
+      {/* Inactive players note */}
+      {admin && players.some(p => !p.active) && (
+        <p className="text-xs text-zinc-600 anim-fade">
+          Inactive players are excluded from future rounds but their stats are kept.
+        </p>
+      )}
+
       {/* List */}
       {isLoading ? (
         <SkeletonTable rows={6} />
@@ -216,7 +231,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
           {players.map((p, i) => (
             <div
               key={p.id}
-              className="flex items-center gap-3 px-4 py-3.5 cursor-pointer hover:bg-surface-3/50 active:bg-surface-4/50 transition-colors anim-fade"
+              className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer hover:bg-surface-3/50 active:bg-surface-4/50 transition-colors anim-fade ${!p.active ? 'opacity-50' : ''}`}
               style={{ animationDelay: `${i * 30}ms` }}
               onClick={() => editingId !== p.id && setSelectedPlayer(p)}
             >
@@ -239,7 +254,16 @@ export default function PlayersTab({ slug, admin, token }: Props) {
                     autoFocus
                   />
                 ) : (
-                  <span className="font-medium text-white truncate block">{p.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-medium truncate block ${p.active ? 'text-white' : 'text-zinc-600 line-through'}`}>
+                      {p.name}
+                    </span>
+                    {!p.active && (
+                      <span className="font-display text-[9px] font-bold uppercase tracking-widest text-zinc-700 border border-zinc-800 px-1 rounded shrink-0">
+                        odešel
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
               {editingId === p.id ? (
@@ -260,34 +284,63 @@ export default function PlayersTab({ slug, admin, token }: Props) {
                 </div>
               ) : (
                 <>
-                  {p.rating > 0 && (
+                  {p.rating > 0 && p.active && (
                     <span className="font-display text-xs font-bold text-zinc-600 shrink-0 tabular-nums">
                       {p.rating.toFixed(1)}
                     </span>
                   )}
                   {admin && (
                     <div className="flex items-center shrink-0">
-                      <button
-                        onClick={(e) => startEdit(e, p)}
-                        className="p-2 text-zinc-700 hover:text-brand transition-colors cursor-pointer"
-                        aria-label={`Rename ${p.name}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setRemoveTarget(p)
-                        }}
-                        className="p-2 -mr-2 text-zinc-700 hover:text-accent-red transition-colors cursor-pointer"
-                        aria-label={`Remove ${p.name}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                      {p.active && (
+                        <button
+                          onClick={(e) => startEdit(e, p)}
+                          className="p-2 text-zinc-700 hover:text-brand transition-colors cursor-pointer"
+                          aria-label={`Rename ${p.name}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                          </svg>
+                        </button>
+                      )}
+                      {p.games_played > 0 ? (
+                        /* Player has match history — toggle active instead of delete */
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleActiveMutation.mutate({ id: p.id, active: !p.active })
+                          }}
+                          disabled={toggleActiveMutation.isPending}
+                          className={`p-2 -mr-2 transition-colors cursor-pointer disabled:opacity-30 ${p.active ? 'text-zinc-700 hover:text-accent-orange' : 'text-zinc-700 hover:text-qualify'}`}
+                          aria-label={p.active ? `Deactivate ${p.name}` : `Reactivate ${p.name}`}
+                          title={p.active ? 'Označit jako odešel (vyřadit z losování)' : 'Vrátit do turnaje'}
+                        >
+                          {p.active ? (
+                            /* Exit icon */
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            /* Return icon */
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                      ) : (
+                        /* No match history — can hard delete */
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setRemoveTarget(p)
+                          }}
+                          className="p-2 -mr-2 text-zinc-700 hover:text-accent-red transition-colors cursor-pointer"
+                          aria-label={`Remove ${p.name}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   )}
                 </>

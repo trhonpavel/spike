@@ -57,6 +57,7 @@ export interface Player {
   point_differential: number
   games_played: number
   losses: number
+  active: boolean
 }
 
 export interface MatchData {
@@ -187,6 +188,13 @@ export const api = {
       method: 'PATCH',
       headers: headers(token),
       body: JSON.stringify({ name }),
+    }),
+
+  setPlayerActive: (slug: string, playerId: number, active: boolean, token: string) =>
+    request<Player>(`${BASE}/${slug}/players/${playerId}`, {
+      method: 'PATCH',
+      headers: headers(token),
+      body: JSON.stringify({ active }),
     }),
 
   listRounds: (slug: string) =>
