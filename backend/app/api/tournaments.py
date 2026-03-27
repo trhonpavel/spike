@@ -29,6 +29,23 @@ from app.api.websocket import manager
 router = APIRouter(prefix="/api/v1/tournaments", tags=["tournaments"])
 
 
+@router.get("", response_model=list[TournamentPublic])
+async def list_tournaments(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Tournament).order_by(Tournament.id.desc())
+    )
+    tournaments = result.scalars().all()
+    out = []
+    for t in tournaments:
+        league_slug = None
+        if t.league_id:
+            from app.models.league import League
+            lg = await db.get(League, t.league_id)
+            league_slug = lg.slug if lg else None
+        out.append(TournamentPublic(id=t.id, name=t.name, slug=t.slug, status=t.status, league_slug=league_slug))
+    return out
+
+
 def _slugify(name: str) -> str:
     slug = name.lower().strip()
     slug = re.sub(r"[^\w\s-]", "", slug)

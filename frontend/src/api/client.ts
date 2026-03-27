@@ -164,6 +164,9 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
 
+  listTournaments: () =>
+    request<Tournament[]>(BASE),
+
   getTournament: (slug: string) =>
     request<Tournament>(`${BASE}/${slug}`),
 

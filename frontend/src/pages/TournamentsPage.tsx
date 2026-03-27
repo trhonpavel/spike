@@ -1,24 +1,37 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { adminApi, type TournamentListItem } from '../api/admin-client'
-import { getAdminToken } from '../api/admin-client'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { adminApi, getAdminToken, type TournamentListItem } from '../api/admin-client'
+import { api, getSessionToken, type Tournament } from '../api/client'
 import { useTheme } from '../hooks/useTheme'
 
 type Filter = 'all' | 'active' | 'finished'
 
+type AnyTournament = TournamentListItem | Tournament
+
 export default function TournamentsPage() {
   const [filter, setFilter] = useState<Filter>('all')
   const { theme, toggle: toggleTheme } = useTheme()
-  const hasToken = !!getAdminToken()
+  const queryClient = useQueryClient()
+  const hasAdminToken = !!getAdminToken()
+  const hasSession = !!getSessionToken()
 
-  const { data: tournaments = [], isLoading } = useQuery({
+  const { data: adminTournaments = [], isLoading: adminLoading } = useQuery({
     queryKey: ['admin-tournaments'],
     queryFn: () => adminApi.listTournaments(),
-    enabled: hasToken,
+    enabled: hasAdminToken,
   })
 
-  const filtered = tournaments.filter((t: TournamentListItem) => {
+  const { data: publicTournaments = [], isLoading: publicLoading } = useQuery({
+    queryKey: ['tournaments-list'],
+    queryFn: () => api.listTournaments(),
+    enabled: !hasAdminToken,
+  })
+
+  const tournaments: AnyTournament[] = hasAdminToken ? adminTournaments : publicTournaments
+  const isLoading = hasAdminToken ? adminLoading : publicLoading
+
+  const filtered = tournaments.filter((t: AnyTournament) => {
     if (filter === 'active') return t.status === 'active'
     if (filter === 'finished') return t.status === 'finished'
     return true
@@ -42,6 +55,19 @@ export default function TournamentsPage() {
               All Tournaments
             </h1>
           </div>
+          <button
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ['admin-tournaments'] })
+              queryClient.invalidateQueries({ queryKey: ['tournaments-list'] })
+            }}
+            className="p-2 rounded-lg text-zinc-500 hover:text-brand transition-colors cursor-pointer"
+            aria-label="Refresh"
+            title="Refresh"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+          </button>
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg text-zinc-500 hover:text-brand transition-colors cursor-pointer"
@@ -76,10 +102,10 @@ export default function TournamentsPage() {
           ))}
         </div>
 
-        {!hasToken && (
+        {!hasSession && !hasAdminToken && (
           <div className="text-center py-20 space-y-2">
-            <p className="font-display text-sm text-zinc-600 uppercase tracking-wider">Admin login required</p>
-            <Link to="/admin" className="text-brand text-sm hover:underline">Go to Admin Panel</Link>
+            <p className="font-display text-sm text-zinc-600 uppercase tracking-wider">Login required</p>
+            <Link to="/" className="text-brand text-sm hover:underline">← Back</Link>
           </div>
         )}
 
@@ -89,7 +115,7 @@ export default function TournamentsPage() {
           </div>
         )}
 
-        {!isLoading && hasToken && filtered.length === 0 && (
+        {!isLoading && (hasSession || hasAdminToken) && filtered.length === 0 && (
           <div className="text-center py-20 space-y-2">
             <div className="score-num text-5xl text-zinc-800">0</div>
             <p className="font-display text-sm text-zinc-600 uppercase tracking-wider">No tournaments found</p>
@@ -115,9 +141,9 @@ export default function TournamentsPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-zinc-500">
-                    <span>{t.player_count} players</span>
-                    <span>{t.round_count} rounds</span>
-                    {t.created_at && (
+                    {'player_count' in t && <span>{t.player_count} players</span>}
+                    {'round_count' in t && <span>{t.round_count} rounds</span>}
+                    {'created_at' in t && t.created_at && (
                       <span>{new Date(t.created_at).toLocaleDateString()}</span>
                     )}
                   </div>
