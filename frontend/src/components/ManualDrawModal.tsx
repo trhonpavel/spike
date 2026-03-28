@@ -28,7 +28,7 @@ export default function ManualDrawModal({ players, onConfirm, onCancel, isPendin
       if (currentGroupIdx < 0) return
       const newSize = groupSizes[currentGroupIdx] + 1
       setAssignment(prev => ({ ...prev, [playerId]: currentGroupIdx }))
-      if (newSize === 4 && assignedIds.size + 1 < players.length) {
+      if (newSize === 4 && players.length - (assignedIds.size + 1) >= 4) {
         setNumGroups(n => n + 1)
       }
     }
