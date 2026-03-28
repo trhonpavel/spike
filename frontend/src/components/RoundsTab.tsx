@@ -25,6 +25,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
   const queryClient = useQueryClient()
   const [finalizeTarget, setFinalizeTarget] = useState<number | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+  const [unfinalizeTarget, setUnfinalizeTarget] = useState<number | null>(null)
 
   const { data: rounds = [], isLoading } = useQuery({
     queryKey: ['rounds', slug],
@@ -55,7 +56,20 @@ export default function RoundsTab({ slug, admin, token }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rounds', slug] }),
   })
 
+  const unfinalizeMutation = useMutation({
+    mutationFn: (roundId: number) => api.unfinalizeRound(slug, roundId, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
+      queryClient.invalidateQueries({ queryKey: ['standings', slug] })
+      queryClient.invalidateQueries({ queryKey: ['players', slug] })
+    },
+  })
+
   const canDraw = rounds.every((r: RoundData) => r.status === 'finalized')
+
+  const lastFinalizedId = rounds
+    .filter((r: RoundData) => r.status === 'finalized')
+    .reduce((last: RoundData | null, r: RoundData) => (!last || r.round_number > last.round_number ? r : last), null)?.id ?? null
 
   const allScoresEntered = (round: RoundData) =>
     round.groups.every((g) =>
@@ -133,6 +147,20 @@ export default function RoundsTab({ slug, admin, token }: Props) {
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+              {/* Undo button for last finalized round */}
+              {admin && round.status === 'finalized' && round.id === lastFinalizedId && (
+                <button
+                  onClick={() => setUnfinalizeTarget(round.id)}
+                  disabled={unfinalizeMutation.isPending}
+                  className="p-2 text-zinc-700 hover:text-accent-orange transition-colors cursor-pointer disabled:opacity-30"
+                  aria-label={`Undo round ${round.round_number}`}
+                  title="Undo finalization"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </button>
               )}
@@ -216,6 +244,19 @@ export default function RoundsTab({ slug, admin, token }: Props) {
           setDeleteTarget(null)
         }}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={unfinalizeTarget !== null}
+        title="Undo Round Finalization?"
+        description="This will reverse all stats and Elo changes from this round and reopen it for score editing."
+        confirmLabel="Undo"
+        variant="warning"
+        onConfirm={() => {
+          if (unfinalizeTarget !== null) unfinalizeMutation.mutate(unfinalizeTarget)
+          setUnfinalizeTarget(null)
+        }}
+        onCancel={() => setUnfinalizeTarget(null)}
       />
     </div>
   )

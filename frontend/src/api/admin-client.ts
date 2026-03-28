@@ -26,6 +26,11 @@ async function adminRequest<T>(url: string, init?: RequestInit): Promise<T> {
     headers: { ...authHeaders(), ...(init?.headers || {}) },
   })
   if (!res.ok) {
+    if (res.status === 401 && getAdminToken()) {
+      // Token stale (server restarted) — clear and redirect to login
+      clearAdminToken()
+      window.location.href = '/admin'
+    }
     const body = await res.json().catch(() => ({}))
     throw new Error(body.detail || `HTTP ${res.status}`)
   }

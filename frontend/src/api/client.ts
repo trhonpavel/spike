@@ -237,6 +237,12 @@ export const api = {
       headers: headers(token),
     }),
 
+  unfinalizeRound: (slug: string, roundId: number, token: string) =>
+    request<RoundData>(`${BASE}/${slug}/rounds/${roundId}/finalize`, {
+      method: 'DELETE',
+      headers: headers(token),
+    }),
+
   getStandings: (slug: string, sortBy: string = 'rating') =>
     request<Standing[]>(`${BASE}/${slug}/standings?sort_by=${sortBy}`),
 

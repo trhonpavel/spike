@@ -43,10 +43,23 @@ export function useLiveUpdates(slug: string, onEvent: (event: string) => void) {
       }, delay)
     }
 
+    function handleVisibilityChange() {
+      if (!document.hidden && ws.readyState === WebSocket.CLOSED) {
+        clearTimeout(retryTimeout)
+        retries = 0
+        ws = connect()
+        ws.onopen = () => { retries = 0 }
+        ws.onclose = scheduleReconnect
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
       clearTimeout(retryTimeout)
       retries = 10 // prevent reconnect during cleanup
       ws.close()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [connect])
 }

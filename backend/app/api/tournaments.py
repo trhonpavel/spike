@@ -22,7 +22,7 @@ from app.schemas.tournament import (
 )
 from app.config import settings
 from app.services.draw import perform_draw
-from app.services.scoring import update_match_score, finalize_round
+from app.services.scoring import update_match_score, finalize_round, unfinalize_round
 from app.core.stats import compute_player_stats
 from app.api.websocket import manager
 
@@ -463,6 +463,54 @@ async def finalize_round_endpoint(
     )
     round_obj = result.scalar_one()
     await manager.broadcast(slug, "round_finalized")
+    return _build_round_out(round_obj)
+
+
+@router.delete("/{slug}/rounds/{round_id}/finalize", response_model=RoundOut)
+async def unfinalize_round_endpoint(
+    slug: str,
+    round_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_admin_token: str | None = Header(None),
+):
+    t = await _get_tournament(db, slug)
+    _verify_admin(t, x_admin_token)
+
+    result = await db.execute(
+        select(Round)
+        .options(
+            selectinload(Round.groups).selectinload(Group.matches),
+            selectinload(Round.groups).selectinload(Group.player1),
+            selectinload(Round.groups).selectinload(Group.player2),
+            selectinload(Round.groups).selectinload(Group.player3),
+            selectinload(Round.groups).selectinload(Group.player4),
+            selectinload(Round.waitings).selectinload(RoundWaiting.player),
+        )
+        .where(Round.id == round_id, Round.tournament_id == t.id)
+    )
+    round_obj = result.scalar_one_or_none()
+    if not round_obj:
+        raise HTTPException(404, "Round not found")
+
+    try:
+        await unfinalize_round(db, round_obj)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    result = await db.execute(
+        select(Round)
+        .options(
+            selectinload(Round.groups).selectinload(Group.matches),
+            selectinload(Round.groups).selectinload(Group.player1),
+            selectinload(Round.groups).selectinload(Group.player2),
+            selectinload(Round.groups).selectinload(Group.player3),
+            selectinload(Round.groups).selectinload(Group.player4),
+            selectinload(Round.waitings).selectinload(RoundWaiting.player),
+        )
+        .where(Round.id == round_id)
+    )
+    round_obj = result.scalar_one()
+    await manager.broadcast(slug, "round_drawn")
     return _build_round_out(round_obj)
 
 

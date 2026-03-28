@@ -212,3 +212,102 @@ async def finalize_round(db: AsyncSession, round_obj: Round) -> Round:
     round_obj.status = RoundStatus.finalized
     await db.commit()
     return round_obj
+
+
+async def unfinalize_round(db: AsyncSession, round_obj: Round) -> Round:
+    """Reverse finalization: restore all player stats/Elo and set round back to confirmed."""
+    if round_obj.status != RoundStatus.finalized:
+        raise ValueError("Round is not finalized")
+
+    # Only allow undoing the last finalized round
+    result = await db.execute(
+        select(Round).where(
+            Round.tournament_id == round_obj.tournament_id,
+            Round.status == RoundStatus.finalized,
+            Round.round_number > round_obj.round_number,
+        )
+    )
+    if result.scalar_one_or_none():
+        raise ValueError("Can only undo the last finalized round")
+
+    # Load groups + matches
+    result = await db.execute(
+        select(Group).options(selectinload(Group.matches)).where(Group.round_id == round_obj.id)
+    )
+    groups = list(result.scalars().all())
+    match_ids = [m.id for g in groups for m in g.matches]
+
+    if match_ids:
+        # Load all MatchPlayerStat records for this round
+        mps_result = await db.execute(
+            select(MatchPlayerStat).where(MatchPlayerStat.match_id.in_(match_ids))
+        )
+        all_mps = list(mps_result.scalars().all())
+
+        # Group by player
+        by_player: dict[int, list[MatchPlayerStat]] = {}
+        for mps in all_mps:
+            by_player.setdefault(mps.player_id, []).append(mps)
+
+        # Load affected players
+        p_result = await db.execute(select(Player).where(Player.id.in_(by_player.keys())))
+        players = {p.id: p for p in p_result.scalars().all()}
+
+        for pid, mps_list in by_player.items():
+            player = players[pid]
+            mps_list.sort(key=lambda m: m.match_id)
+
+            # Restore Elo to before the first match in this round
+            player.elo_rating = mps_list[0].elo_before
+
+            # Reverse accumulated stats
+            player.wins -= sum(1 for m in mps_list if m.won)
+            player.losses -= sum(1 for m in mps_list if not m.won)
+            player.games_played -= len(mps_list)
+            player.balls_won -= sum(m.score_for for m in mps_list)
+            player.balls_total -= sum(m.score_for + m.score_against for m in mps_list)
+            player.point_differential -= sum(m.score_for - m.score_against for m in mps_list)
+            player.rating = rate_player(player.wins, player.balls_won, player.balls_total, player.waitings)
+
+        # Reverse PartnerRecords
+        tournament_id = round_obj.tournament_id
+        for group in groups:
+            for match in group.matches:
+                s1, s2 = match.score_team1, match.score_team2
+                for lo, hi, won, diff in [
+                    (min(match.team1_p1_id, match.team1_p2_id), max(match.team1_p1_id, match.team1_p2_id), s1 > s2, s1 - s2),
+                    (min(match.team2_p1_id, match.team2_p2_id), max(match.team2_p1_id, match.team2_p2_id), s2 > s1, s2 - s1),
+                ]:
+                    pr_result = await db.execute(
+                        select(PartnerRecord).where(
+                            PartnerRecord.tournament_id == tournament_id,
+                            PartnerRecord.player1_id == lo,
+                            PartnerRecord.player2_id == hi,
+                        )
+                    )
+                    pr = pr_result.scalar_one_or_none()
+                    if pr:
+                        pr.games_together -= 1
+                        if won:
+                            pr.wins_together -= 1
+                        pr.point_diff_together -= diff
+                        if pr.games_together <= 0:
+                            await db.delete(pr)
+
+        # Delete MatchPlayerStat records
+        for mps in all_mps:
+            await db.delete(mps)
+
+    # Reverse waitings
+    wait_result = await db.execute(
+        select(RoundWaiting).where(RoundWaiting.round_id == round_obj.id)
+    )
+    for wr in wait_result.scalars().all():
+        p_result = await db.get(Player, wr.player_id)
+        if p_result:
+            p_result.waitings -= 1
+            p_result.rating = rate_player(p_result.wins, p_result.balls_won, p_result.balls_total, p_result.waitings)
+
+    round_obj.status = RoundStatus.confirmed
+    await db.commit()
+    return round_obj
