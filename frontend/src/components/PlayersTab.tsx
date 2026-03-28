@@ -323,8 +323,8 @@ export default function PlayersTab({ slug, admin, token }: Props) {
                           </svg>
                         )}
                       </button>
-                      {/* Delete — only if no match history */}
-                      {p.games_played === 0 && (
+                      {/* Delete — only if never been in any round */}
+                      {p.games_played === 0 && p.waitings === 0 && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation()

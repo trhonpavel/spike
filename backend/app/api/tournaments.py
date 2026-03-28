@@ -270,8 +270,8 @@ async def remove_player(
     if not player:
         raise HTTPException(404, "Player not found")
 
-    if player.games_played > 0:
-        # Player has match history — soft delete to preserve stats and league sync
+    if player.games_played > 0 or player.waitings > 0:
+        # Player has been in a round — soft delete to preserve stats and league sync
         player.active = False
         await db.commit()
     else:
