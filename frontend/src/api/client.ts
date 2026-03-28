@@ -212,6 +212,13 @@ export const api = {
       headers: headers(token),
     }),
 
+  manualDrawRound: (slug: string, groups: number[][], waitingIds: number[], token: string) =>
+    request<RoundData>(`${BASE}/${slug}/rounds/draw/manual`, {
+      method: 'POST',
+      headers: headers(token),
+      body: JSON.stringify({ groups, waiting_player_ids: waitingIds }),
+    }),
+
   confirmRound: (slug: string, roundId: number, token: string) =>
     request<RoundData>(`${BASE}/${slug}/rounds/${roundId}/confirm`, {
       method: 'POST',

@@ -19,9 +19,10 @@ from app.schemas.tournament import (
     ScoreUpdate, StandingOut,
     PartnerStatOut, PlayerStatsOut,
     PartnerRecordOut, MatchPlayerStatOut,
+    ManualDrawInput,
 )
 from app.config import settings
-from app.services.draw import perform_draw
+from app.services.draw import perform_draw, MATCH_TABLE
 from app.services.scoring import update_match_score, finalize_round, unfinalize_round
 from app.core.stats import compute_player_stats
 from app.api.websocket import manager
@@ -351,6 +352,82 @@ async def draw_round(
         new_round = await perform_draw(db, t)
     except ValueError as e:
         raise HTTPException(400, str(e))
+    await manager.broadcast(slug, "round_drawn")
+    return _build_round_out(new_round)
+
+
+@router.post("/{slug}/rounds/draw/manual", response_model=RoundOut, status_code=201)
+async def manual_draw_round(
+    slug: str,
+    data: ManualDrawInput,
+    db: AsyncSession = Depends(get_db),
+    x_admin_token: str | None = Header(None),
+):
+    t = await _get_tournament(db, slug)
+    _verify_admin(t, x_admin_token)
+
+    rounds_result = await db.execute(select(Round).where(Round.tournament_id == t.id))
+    existing_rounds = list(rounds_result.scalars().all())
+    for r in existing_rounds:
+        if r.status != RoundStatus.finalized:
+            raise HTTPException(400, f"Round {r.round_number} is not finalized yet")
+
+    if not data.groups:
+        raise HTTPException(400, "At least one group required")
+
+    for group in data.groups:
+        if len(group) != 4:
+            raise HTTPException(400, "Each group must have exactly 4 players")
+
+    all_ids = [pid for group in data.groups for pid in group]
+    if len(all_ids) != len(set(all_ids)):
+        raise HTTPException(400, "Duplicate player IDs")
+
+    all_ids_to_check = list(set(all_ids + data.waiting_player_ids))
+    p_result = await db.execute(
+        select(Player).where(Player.id.in_(all_ids_to_check), Player.tournament_id == t.id, Player.active == True)
+    )
+    valid_players = {p.id for p in p_result.scalars().all()}
+    for pid in all_ids_to_check:
+        if pid not in valid_players:
+            raise HTTPException(400, f"Player {pid} not found or inactive")
+
+    round_number = len(existing_rounds) + 1
+    new_round = Round(tournament_id=t.id, round_number=round_number, status=RoundStatus.drawn)
+    db.add(new_round)
+    await db.flush()
+
+    for pid in data.waiting_player_ids:
+        db.add(RoundWaiting(round_id=new_round.id, player_id=pid))
+
+    matches_per_group = min(max(getattr(t, 'matches_per_group', 3), 1), 3)
+    for idx, group_ids in enumerate(data.groups):
+        group = Group(
+            round_id=new_round.id, group_index=idx,
+            player1_id=group_ids[0], player2_id=group_ids[1],
+            player3_id=group_ids[2], player4_id=group_ids[3],
+        )
+        db.add(group)
+        await db.flush()
+        for mi, (t1p1, t1p2, t2p1, t2p2) in enumerate(MATCH_TABLE[:matches_per_group]):
+            db.add(Match(
+                group_id=group.id, match_index=mi,
+                team1_p1_id=group_ids[t1p1], team1_p2_id=group_ids[t1p2],
+                team2_p1_id=group_ids[t2p1], team2_p2_id=group_ids[t2p2],
+            ))
+
+    await db.commit()
+    result = await db.execute(
+        select(Round).options(
+            selectinload(Round.groups).selectinload(Group.matches),
+            selectinload(Round.groups).selectinload(Group.player1),
+            selectinload(Round.groups).selectinload(Group.player2),
+            selectinload(Round.groups).selectinload(Group.player3),
+            selectinload(Round.groups).selectinload(Group.player4),
+            selectinload(Round.waitings).selectinload(RoundWaiting.player),
+        ).where(Round.id == new_round.id)
+    )
+    new_round = result.scalar_one()
     await manager.broadcast(slug, "round_drawn")
     return _build_round_out(new_round)
 

@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import type { RoundData } from '../api/client'
 import GroupCard from './GroupCard'
 import ConfirmDialog from './ConfirmDialog'
+import ManualDrawModal from './ManualDrawModal'
 import { SkeletonCard } from './Skeleton'
 
 interface Props {
@@ -26,11 +27,18 @@ export default function RoundsTab({ slug, admin, token }: Props) {
   const [finalizeTarget, setFinalizeTarget] = useState<number | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
   const [unfinalizeTarget, setUnfinalizeTarget] = useState<number | null>(null)
+  const [showManualDraw, setShowManualDraw] = useState(false)
 
   const { data: rounds = [], isLoading } = useQuery({
     queryKey: ['rounds', slug],
     queryFn: () => api.listRounds(slug),
   })
+
+  const { data: players = [] } = useQuery({
+    queryKey: ['players', slug],
+    queryFn: () => api.listPlayers(slug),
+  })
+  const activePlayers = players.filter((p) => p.active)
 
   const drawMutation = useMutation({
     mutationFn: () => api.drawRound(slug, token!),
@@ -65,6 +73,12 @@ export default function RoundsTab({ slug, admin, token }: Props) {
     },
   })
 
+  const manualDrawMutation = useMutation({
+    mutationFn: ({ groups, waitingIds }: { groups: number[][], waitingIds: number[] }) =>
+      api.manualDrawRound(slug, groups, waitingIds, token!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rounds', slug] }),
+  })
+
   const canDraw = rounds.every((r: RoundData) => r.status === 'finalized')
 
   const lastFinalizedId = rounds
@@ -88,18 +102,26 @@ export default function RoundsTab({ slug, admin, token }: Props) {
     <div className="space-y-5">
       {/* Draw CTA */}
       {admin && canDraw && (
-        <button
-          onClick={() => drawMutation.mutate()}
-          disabled={drawMutation.isPending}
-          className="w-full py-4 rounded-2xl font-display text-lg font-bold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] neon-box border border-brand/30 bg-gradient-to-r from-brand/15 via-brand/10 to-brand/15 text-brand hover:from-brand/20 hover:to-brand/20 anim-gradient"
-        >
-          {drawMutation.isPending ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="w-5 h-5 border-2 border-brand/30 border-t-brand rounded-full anim-spin" />
-              Drawing
-            </span>
-          ) : '+ Draw New Round'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => drawMutation.mutate()}
+            disabled={drawMutation.isPending}
+            className="flex-1 py-4 rounded-2xl font-display text-lg font-bold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] neon-box border border-brand/30 bg-gradient-to-r from-brand/15 via-brand/10 to-brand/15 text-brand hover:from-brand/20 hover:to-brand/20 anim-gradient"
+          >
+            {drawMutation.isPending ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-5 h-5 border-2 border-brand/30 border-t-brand rounded-full anim-spin" />
+                Drawing
+              </span>
+            ) : '+ Auto Draw'}
+          </button>
+          <button
+            onClick={() => setShowManualDraw(true)}
+            className="px-5 py-4 rounded-2xl font-display text-sm font-bold uppercase tracking-wider border border-border text-zinc-400 hover:text-white hover:border-zinc-500 transition-all cursor-pointer"
+          >
+            Manual
+          </button>
+        </div>
       )}
 
       {drawMutation.isError && (
@@ -258,6 +280,18 @@ export default function RoundsTab({ slug, admin, token }: Props) {
         }}
         onCancel={() => setUnfinalizeTarget(null)}
       />
+
+      {showManualDraw && (
+        <ManualDrawModal
+          players={activePlayers}
+          onConfirm={(groups, waitingIds) => {
+            manualDrawMutation.mutate({ groups, waitingIds })
+            setShowManualDraw(false)
+          }}
+          onCancel={() => setShowManualDraw(false)}
+          isPending={manualDrawMutation.isPending}
+        />
+      )}
     </div>
   )
 }
