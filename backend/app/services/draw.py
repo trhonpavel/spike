@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.tournament import (
-    Tournament, Player, Round, Group, Match, RoundWaiting, RoundStatus,
+    Tournament, Player, Round, Group, Match, RoundWaiting, RoundStatus, PartnerRecord,
 )
 from app.core.draw_optimizer import DrawPlayer, sameness, rate_draw
 
@@ -25,6 +25,17 @@ MATCH_TABLE = [
     (0, 2, 1, 3),
     (0, 3, 1, 2),
 ]
+
+
+async def get_partner_counts(db: AsyncSession, tournament_id: int) -> dict[tuple[int, int], int]:
+    """Return dict of {(min_id, max_id): games_together} from PartnerRecord."""
+    result = await db.execute(
+        select(PartnerRecord).where(PartnerRecord.tournament_id == tournament_id)
+    )
+    return {
+        (r.player1_id, r.player2_id): r.games_together
+        for r in result.scalars().all()
+    }
 
 
 async def get_played_games(db: AsyncSession, tournament_id: int) -> list[list[int]]:
@@ -47,6 +58,7 @@ async def get_played_games(db: AsyncSession, tournament_id: int) -> list[list[in
 def _optimize_draw(
     groups: list[list[DrawPlayer]],
     played_games: list[list[int]],
+    partner_counts: dict[tuple[int, int], int] | None = None,
     time_limit: float = 5.0,
 ) -> list[list[DrawPlayer]]:
     """Optimize draw by swapping players between adjacent groups.
@@ -85,7 +97,7 @@ def _optimize_draw(
 
     # Phase 2: optimize by trying all single swaps (+ nested double swaps)
     best = copy.deepcopy(groups)
-    best_ranking = rate_draw(groups, played_games)
+    best_ranking = rate_draw(groups, played_games, partner_counts)
     if best_ranking == -1:
         best_ranking = 10000000.0
 
@@ -95,7 +107,7 @@ def _optimize_draw(
             for k in range(4):
                 trial = copy.deepcopy(groups)
                 trial[i][j], trial[i + 1][k] = trial[i + 1][k], trial[i][j]
-                ranking = rate_draw(trial, played_games)
+                ranking = rate_draw(trial, played_games, partner_counts)
                 if ranking > -0.5 and ranking < best_ranking:
                     best_ranking = ranking
                     best = copy.deepcopy(trial)
@@ -108,7 +120,7 @@ def _optimize_draw(
                             for kk in range(m_start, 4):
                                 trial2 = copy.deepcopy(trial)
                                 trial2[ii][jj], trial2[ii + 1][kk] = trial2[ii + 1][kk], trial2[ii][jj]
-                                ranking2 = rate_draw(trial2, played_games)
+                                ranking2 = rate_draw(trial2, played_games, partner_counts)
                                 if ranking2 > -0.5 and ranking2 < best_ranking:
                                     best_ranking = ranking2
                                     best = copy.deepcopy(trial2)
@@ -126,8 +138,9 @@ async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
     if len(players) < 4:
         raise ValueError("Need at least 4 players")
 
-    # Get past groups
+    # Get past groups and partner history
     played_games = await get_played_games(db, tournament.id)
+    partner_counts = await get_partner_counts(db, tournament.id)
 
     # Determine round number
     rounds_result = await db.execute(
@@ -160,7 +173,7 @@ async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
     ]
 
     # Optimize (CPU-bound — run in thread pool to avoid blocking the event loop)
-    optimized = await asyncio.to_thread(_optimize_draw, initial_groups, played_games)
+    optimized = await asyncio.to_thread(_optimize_draw, initial_groups, played_games, partner_counts)
 
     # Create Round
     new_round = Round(
