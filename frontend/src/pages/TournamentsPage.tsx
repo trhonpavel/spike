@@ -149,10 +149,10 @@ export default function TournamentsPage() {
             {/* Leagues */}
             <section>
               <h2 className="font-display font-bold text-xs uppercase tracking-widest text-zinc-500 mb-3">
-                Ligy
+                Leagues
               </h2>
               {filteredLeagues.length === 0 ? (
-                <p className="text-center py-6 text-zinc-700 text-sm">Žádné ligy</p>
+                <p className="text-center py-6 text-zinc-700 text-sm">No leagues</p>
               ) : (
                 <div className="space-y-2">
                   {filteredLeagues.map((l) => {
@@ -172,7 +172,7 @@ export default function TournamentsPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-xs text-zinc-500">
-                          {'player_count' in l && <span>{l.player_count} hráčů</span>}
+                          {'player_count' in l && <span>{l.player_count} players</span>}
                           <span className="text-zinc-700">{l.slug}</span>
                         </div>
                       </Link>
@@ -185,10 +185,10 @@ export default function TournamentsPage() {
             {/* Tournaments */}
             <section>
               <h2 className="font-display font-bold text-xs uppercase tracking-widest text-zinc-500 mb-3">
-                Turnaje
+                Tournaments
               </h2>
               {filteredTournaments.length === 0 ? (
-                <p className="text-center py-6 text-zinc-700 text-sm">Žádné turnaje</p>
+                <p className="text-center py-6 text-zinc-700 text-sm">No tournaments</p>
               ) : (
                 <div className="space-y-2">
                   {filteredTournaments.map((t) => {
@@ -208,10 +208,10 @@ export default function TournamentsPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-xs text-zinc-500">
-                          {'player_count' in t && <span>{t.player_count} hráčů</span>}
-                          {'round_count' in t && <span>{t.round_count} kol</span>}
+                          {'player_count' in t && <span>{t.player_count} players</span>}
+                          {'round_count' in t && <span>{t.round_count} rounds</span>}
                           {'created_at' in t && t.created_at && (
-                            <span>{new Date(t.created_at).toLocaleDateString('cs-CZ')}</span>
+                            <span>{new Date(t.created_at).toLocaleDateString('en-US')}</span>
                           )}
                         </div>
                       </Link>

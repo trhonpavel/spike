@@ -98,8 +98,8 @@ export default function LeaguePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-zinc-500 mb-4">Liga nenalezena</p>
-          <Link to="/" className="text-brand text-sm">← Zpět na hlavní stránku</Link>
+          <p className="text-zinc-500 mb-4">League not found</p>
+          <Link to="/" className="text-brand text-sm">← Back to home</Link>
         </div>
       </div>
     )
@@ -111,7 +111,7 @@ export default function LeaguePage() {
   const StandingsTab = () => (
     <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden">
       {league.players.length === 0 ? (
-        <p className="px-4 py-8 text-center text-zinc-600 text-sm">Zatím žádní hráči</p>
+        <p className="px-4 py-8 text-center text-zinc-600 text-sm">No players yet</p>
       ) : (
         <div className="divide-y divide-border/50">
           {league.players.map((p, i) => {
@@ -133,7 +133,7 @@ export default function LeaguePage() {
                     )}
                   </div>
                   <div className="text-xs text-zinc-600 mt-0.5">
-                    {p.sessions_attended} tréninků · {p.total_wins}W {p.total_losses}L · {winRate}% win
+                    {p.sessions_attended} sessions · {p.total_wins}W {p.total_losses}L · {winRate}% win
                   </div>
                 </div>
                 <div className="text-right shrink-0">
@@ -152,15 +152,15 @@ export default function LeaguePage() {
   const SessionsTab = () => (
     <div className="space-y-2">
       {league.sessions.length === 0 ? (
-        <p className="text-center py-8 text-zinc-600 text-sm">Zatím žádné tréninky</p>
+        <p className="text-center py-8 text-zinc-600 text-sm">No sessions yet</p>
       ) : (
         league.sessions.map((s: LeagueSession) => {
           const dateLabel = s.session_date
-            ? new Date(s.session_date + 'T12:00:00').toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'short' })
+            ? new Date(s.session_date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
             : s.name
           const badge = s.status === 'finished'
-            ? { text: 'Uzavřeno', cls: 'text-qualify bg-qualify/10 border-qualify/20' }
-            : { text: 'Aktivní', cls: 'text-accent-blue bg-accent-blue/10 border-accent-blue/20' }
+            ? { text: 'Closed', cls: 'text-qualify bg-qualify/10 border-qualify/20' }
+            : { text: 'Active', cls: 'text-accent-blue bg-accent-blue/10 border-accent-blue/20' }
           return (
             <div key={s.id} className="bg-surface-2 rounded-2xl border border-border px-4 py-3 flex items-center gap-3">
               <Link to={`/t/${s.slug}`} className="flex-1 min-w-0 cursor-pointer">
@@ -170,19 +170,19 @@ export default function LeaguePage() {
                     {badge.text}
                   </span>
                 </div>
-                <div className="text-xs text-zinc-600 mt-0.5">{s.player_count} hráčů</div>
+                <div className="text-xs text-zinc-600 mt-0.5">{s.player_count} players</div>
               </Link>
               {admin && s.status === 'active' && (
                 <button
                   onClick={() => setConfirmAction({
-                    title: 'Uzavřít trénink?',
-                    description: 'Výsledky se propíší do ligového žebříčku. Tuto akci nelze vrátit.',
+                    title: 'Close session?',
+                    description: 'Results will be written to the league standings. This cannot be undone.',
                     variant: 'warning',
                     onConfirm: () => closeSessionMutation.mutate(s.id),
                   })}
                   className="shrink-0 px-3 py-1.5 rounded-lg font-display text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-qualify border border-border hover:border-qualify/30 transition-all cursor-pointer"
                 >
-                  Uzavřít
+                  Close
                 </button>
               )}
             </div>
@@ -197,7 +197,7 @@ export default function LeaguePage() {
     <div>
       <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
         {league.players.length === 0 ? (
-          <p className="px-4 py-8 text-center text-zinc-600 text-sm">Žádní hráči</p>
+          <p className="px-4 py-8 text-center text-zinc-600 text-sm">No players</p>
         ) : (
           league.players.map((p: LeaguePlayer) => (
             <div key={p.id} className="px-4 py-3 flex items-center gap-3">
@@ -224,7 +224,7 @@ export default function LeaguePage() {
                     onClick={() => setEditingPlayerId(null)}
                     className="px-2.5 py-1.5 rounded-lg border border-border text-zinc-500 font-display text-xs font-bold uppercase cursor-pointer"
                   >
-                    Zrušit
+                    Cancel
                   </button>
                 </>
               ) : (
@@ -239,7 +239,7 @@ export default function LeaguePage() {
                       <button
                         onClick={() => { setEditingPlayerId(p.id); setEditPlayerName(p.name); setFormError('') }}
                         className="p-2 text-zinc-600 hover:text-brand transition-colors cursor-pointer"
-                        title="Přejmenovat"
+                        title="Rename"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -248,7 +248,7 @@ export default function LeaguePage() {
                       <button
                         onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { active: !p.active } })}
                         className={`p-2 transition-colors cursor-pointer ${p.active ? 'text-zinc-600 hover:text-accent-red' : 'text-zinc-700 hover:text-qualify'}`}
-                        title={p.active ? 'Deaktivovat' : 'Aktivovat'}
+                        title={p.active ? 'Deactivate' : 'Activate'}
                       >
                         {p.active ? (
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -277,7 +277,7 @@ export default function LeaguePage() {
                 type="text"
                 value={newPlayerName}
                 onChange={e => setNewPlayerName(e.target.value)}
-                placeholder="Jméno hráče"
+                placeholder="Player name"
                 className="w-full px-4 py-3 bg-surface-3 border border-border rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:border-brand/50 transition-all text-sm"
                 autoFocus
                 onKeyDown={e => {
@@ -292,13 +292,13 @@ export default function LeaguePage() {
                   disabled={!newPlayerName.trim() || addPlayerMutation.isPending}
                   className="btn-brand px-4 py-2 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 cursor-pointer"
                 >
-                  Přidat
+                  Add
                 </button>
                 <button
                   onClick={() => { setShowAddPlayer(false); setFormError('') }}
                   className="px-4 py-2 rounded-xl border border-border text-zinc-500 font-display text-sm font-bold uppercase tracking-wider cursor-pointer"
                 >
-                  Zrušit
+                  Cancel
                 </button>
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function LeaguePage() {
               onClick={() => { setShowAddPlayer(true); setFormError('') }}
               className="w-full py-3 rounded-2xl border border-dashed border-border text-zinc-600 hover:text-brand hover:border-brand/30 text-sm font-display font-bold uppercase tracking-wider transition-all cursor-pointer"
             >
-              + Přidat hráče
+              + Add player
             </button>
           )}
         </div>
@@ -330,13 +330,13 @@ export default function LeaguePage() {
         <div className="w-full max-w-sm bg-surface-2 rounded-2xl border border-border overflow-hidden">
           <div className="px-5 py-4 border-b border-border">
             <h2 className="font-display font-bold text-sm uppercase tracking-widest text-white">
-              Nový trénink
+              New session
             </h2>
           </div>
           <div className="px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
             <div>
               <label className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 block mb-1.5">
-                Datum
+                Date
               </label>
               <input
                 type="date"
@@ -348,13 +348,13 @@ export default function LeaguePage() {
 
             <div>
               <label className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 block mb-1.5">
-                Formát kola
+                Round format
               </label>
               <div className="flex gap-2">
                 {[
-                  { value: 1, label: '1 zápas', sub: 'rychlá rotace' },
-                  { value: 2, label: '2 zápasy', sub: 'střední' },
-                  { value: 3, label: '3 zápasy', sub: 'round-robin' },
+                  { value: 1, label: '1 match', sub: 'fast rotation' },
+                  { value: 2, label: '2 matches', sub: 'medium' },
+                  { value: 3, label: '3 matches', sub: 'round-robin' },
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -375,13 +375,13 @@ export default function LeaguePage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                  Kdo přišel ({attendingIds.size}/{activePlayers.length})
+                  Who attended ({attendingIds.size}/{activePlayers.length})
                 </label>
                 <button
                   onClick={toggleAll}
                   className="font-display text-[10px] font-bold uppercase tracking-widest text-brand cursor-pointer"
                 >
-                  {attendingIds.size === activePlayers.length ? 'Zrušit vše' : 'Vybrat vše'}
+                  {attendingIds.size === activePlayers.length ? 'Deselect all' : 'Select all'}
                 </button>
               </div>
               <div className="space-y-1">
@@ -424,13 +424,13 @@ export default function LeaguePage() {
               disabled={attendingIds.size < 4 || createSessionMutation.isPending}
               className="btn-brand flex-1 py-3 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
-              {createSessionMutation.isPending ? 'Vytvářím...' : `Spustit (${attendingIds.size} hráčů)`}
+              {createSessionMutation.isPending ? 'Creating...' : `Start (${attendingIds.size} players)`}
             </button>
             <button
               onClick={() => { setShowNewSession(false); setFormError('') }}
               className="px-4 py-3 rounded-xl border border-border text-zinc-500 font-display text-sm font-bold uppercase tracking-wider cursor-pointer"
             >
-              Zrušit
+              Cancel
             </button>
           </div>
         </div>
@@ -439,9 +439,9 @@ export default function LeaguePage() {
   }
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'standings', label: 'Žebříček' },
-    { key: 'sessions', label: 'Tréninky' },
-    { key: 'roster', label: 'Hráči' },
+    { key: 'standings', label: 'Standings' },
+    { key: 'sessions', label: 'Sessions' },
+    { key: 'roster', label: 'Roster' },
   ]
 
   return (
@@ -470,7 +470,7 @@ export default function LeaguePage() {
                 }}
                 className="btn-brand px-3 py-1.5 rounded-xl text-xs font-display font-bold uppercase tracking-wider cursor-pointer"
               >
-                + Trénink
+                + Session
               </button>
             )}
             {admin && !appAuth && (
@@ -478,7 +478,7 @@ export default function LeaguePage() {
                 onClick={() => { clearLeagueToken(slug); window.location.reload() }}
                 className="px-3 py-1.5 rounded-lg font-display text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-accent-red border border-border hover:border-accent-red/30 transition-all cursor-pointer"
               >
-                Odhlásit
+                Sign out
               </button>
             )}
           </div>
@@ -517,7 +517,7 @@ export default function LeaguePage() {
           open
           title={confirmAction.title}
           description={confirmAction.description}
-          confirmLabel="Potvrdit"
+          confirmLabel="Confirm"
           variant={confirmAction.variant}
           onConfirm={() => { confirmAction.onConfirm(); setConfirmAction(null) }}
           onCancel={() => setConfirmAction(null)}

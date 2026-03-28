@@ -260,7 +260,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
                     </span>
                     {!p.active && (
                       <span className="font-display text-[9px] font-bold uppercase tracking-widest text-zinc-700 border border-zinc-800 px-1 rounded shrink-0">
-                        odešel
+                        left
                       </span>
                     )}
                   </div>
@@ -312,7 +312,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
                           disabled={toggleActiveMutation.isPending}
                           className={`p-2 -mr-2 transition-colors cursor-pointer disabled:opacity-30 ${p.active ? 'text-zinc-700 hover:text-accent-orange' : 'text-zinc-700 hover:text-qualify'}`}
                           aria-label={p.active ? `Deactivate ${p.name}` : `Reactivate ${p.name}`}
-                          title={p.active ? 'Označit jako odešel (vyřadit z losování)' : 'Vrátit do turnaje'}
+                          title={p.active ? 'Mark as left (exclude from draw)' : 'Return to tournament'}
                         >
                           {p.active ? (
                             /* Exit icon */
