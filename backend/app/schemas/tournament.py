@@ -5,6 +5,11 @@ class TournamentCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
 
 
+class ManualDrawInput(BaseModel):
+    groups: list[list[int]]  # each inner list must have exactly 4 player IDs
+    waiting_player_ids: list[int] = []
+
+
 class TournamentOut(BaseModel):
     id: int
     name: str
