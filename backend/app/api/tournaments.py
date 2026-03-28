@@ -190,7 +190,32 @@ async def add_player(
         else:
             starting_elo = 1500.0
 
-    player = Player(tournament_id=t.id, name=data.name, elo_rating=starting_elo)
+    # If this tournament belongs to a league, auto-create/find the league player
+    league_player_id = None
+    if t.league_id:
+        from app.models.league import LeaguePlayer
+        lp_result = await db.execute(
+            select(LeaguePlayer).where(
+                LeaguePlayer.league_id == t.league_id,
+                LeaguePlayer.name == data.name,
+            )
+        )
+        lp = lp_result.scalar_one_or_none()
+        if not lp:
+            # New to the league — use league avg Elo
+            avg_result = await db.execute(
+                select(func.avg(LeaguePlayer.elo_rating)).where(LeaguePlayer.league_id == t.league_id)
+            )
+            lp_elo = float(avg_result.scalar() or 1500.0)
+            lp = LeaguePlayer(league_id=t.league_id, name=data.name, elo_rating=round(lp_elo, 2))
+            db.add(lp)
+            await db.flush()
+        league_player_id = lp.id
+        # Use their league Elo as starting point (overrides tournament avg)
+        if data.elo_rating is None:
+            starting_elo = lp.elo_rating
+
+    player = Player(tournament_id=t.id, name=data.name, elo_rating=starting_elo, league_player_id=league_player_id)
     db.add(player)
     await db.commit()
     await db.refresh(player)

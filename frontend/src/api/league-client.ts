@@ -113,7 +113,7 @@ export const leagueApi = {
 
   createSession: (
     slug: string,
-    data: { session_date?: string; attending_player_ids: number[]; matches_per_group?: number },
+    data: { session_date?: string; attending_player_ids: number[]; new_player_names?: string[]; matches_per_group?: number },
     token: string,
   ) =>
     request<{ tournament_slug: string; session_id: number }>(`${BASE}/${slug}/sessions`, {

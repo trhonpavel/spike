@@ -28,6 +28,8 @@ export default function LeaguePage() {
   const [sessionDate, setSessionDate] = useState(new Date().toISOString().slice(0, 10))
   const [attendingIds, setAttendingIds] = useState<Set<number>>(new Set())
   const [matchesPerGroup, setMatchesPerGroup] = useState(1)
+  const [newPlayerNames, setNewPlayerNames] = useState<string[]>([])
+  const [newPlayerInput, setNewPlayerInput] = useState('')
   const [showAddPlayer, setShowAddPlayer] = useState(false)
   const [newPlayerName, setNewPlayerName] = useState('')
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null)
@@ -69,11 +71,14 @@ export default function LeaguePage() {
       leagueApi.createSession(slug!, {
         session_date: sessionDate,
         attending_player_ids: Array.from(attendingIds),
+        new_player_names: newPlayerNames,
         matches_per_group: matchesPerGroup,
       }, token),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['league', slug] })
       setShowNewSession(false)
+      setNewPlayerNames([])
+      setNewPlayerInput('')
       navigate(`/t/${data.tournament_slug}`)
     },
     onError: (e: any) => setFormError(e.message),
@@ -416,18 +421,73 @@ export default function LeaguePage() {
               </div>
             </div>
 
+            {/* Add new player to league */}
+            <div>
+              <label className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 block mb-1.5">
+                Add new player to league
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newPlayerInput}
+                  onChange={e => setNewPlayerInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      const name = newPlayerInput.trim()
+                      if (name && !newPlayerNames.includes(name) && !activePlayers.some(p => p.name === name)) {
+                        setNewPlayerNames([...newPlayerNames, name])
+                        setNewPlayerInput('')
+                      }
+                    }
+                  }}
+                  placeholder="Player name..."
+                  className="flex-1 px-3 py-2 bg-surface-3 border border-border rounded-xl text-white placeholder-zinc-700 text-sm focus:outline-none focus:border-brand/50 transition-all"
+                />
+                <button
+                  onClick={() => {
+                    const name = newPlayerInput.trim()
+                    if (name && !newPlayerNames.includes(name) && !activePlayers.some(p => p.name === name)) {
+                      setNewPlayerNames([...newPlayerNames, name])
+                      setNewPlayerInput('')
+                    }
+                  }}
+                  disabled={!newPlayerInput.trim()}
+                  className="px-3 py-2 rounded-xl bg-brand text-black font-display text-xs font-bold uppercase disabled:opacity-30 cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+              {newPlayerNames.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {newPlayerNames.map(name => (
+                    <div key={name} className="flex items-center justify-between px-3 py-2 rounded-xl border border-brand/30 bg-brand/5">
+                      <span className="text-sm text-white">{name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-[9px] font-bold uppercase tracking-widest text-brand">new</span>
+                        <button
+                          onClick={() => setNewPlayerNames(newPlayerNames.filter(n => n !== name))}
+                          className="text-zinc-500 hover:text-accent-red transition-colors cursor-pointer text-sm"
+                        >✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {formError && <p className="text-accent-red text-xs">{formError}</p>}
           </div>
           <div className="px-5 py-4 border-t border-border flex gap-2">
             <button
               onClick={() => createSessionMutation.mutate()}
-              disabled={attendingIds.size < 4 || createSessionMutation.isPending}
+              disabled={attendingIds.size + newPlayerNames.length < 4 || createSessionMutation.isPending}
               className="btn-brand flex-1 py-3 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
-              {createSessionMutation.isPending ? 'Creating...' : `Start (${attendingIds.size} players)`}
+              {createSessionMutation.isPending ? 'Creating...' : `Start (${attendingIds.size + newPlayerNames.length} players)`}
             </button>
             <button
-              onClick={() => { setShowNewSession(false); setFormError('') }}
+              onClick={() => { setShowNewSession(false); setFormError(''); setNewPlayerNames([]); setNewPlayerInput('') }}
               className="px-4 py-3 rounded-xl border border-border text-zinc-500 font-display text-sm font-bold uppercase tracking-wider cursor-pointer"
             >
               Cancel

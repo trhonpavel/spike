@@ -33,7 +33,8 @@ class LeaguePlayerOut(BaseModel):
 
 class LeagueSessionCreate(BaseModel):
     session_date: date | None = None
-    attending_player_ids: list[int]
+    attending_player_ids: list[int] = []
+    new_player_names: list[str] = []
     matches_per_group: int = 1  # 1 = quick rotation, 3 = full round-robin
 
 

@@ -215,6 +215,32 @@ async def create_session(
                 league_player_id=lp.id,
             ))
 
+    if data.new_player_names:
+        avg_result = await db.execute(
+            select(func.avg(LeaguePlayer.elo_rating)).where(LeaguePlayer.league_id == league.id)
+        )
+        league_avg = avg_result.scalar()
+        default_elo = round(float(league_avg), 2) if league_avg else 1500.0
+
+        for raw_name in data.new_player_names:
+            name = raw_name.strip()
+            if not name:
+                continue
+            existing = await db.execute(
+                select(LeaguePlayer).where(LeaguePlayer.league_id == league.id, LeaguePlayer.name == name)
+            )
+            lp = existing.scalar_one_or_none()
+            if not lp:
+                lp = LeaguePlayer(league_id=league.id, name=name, elo_rating=default_elo)
+                db.add(lp)
+                await db.flush()
+            db.add(Player(
+                tournament_id=tournament.id,
+                name=lp.name,
+                elo_rating=lp.elo_rating,
+                league_player_id=lp.id,
+            ))
+
     await db.commit()
     await db.refresh(tournament)
     return {"tournament_slug": tournament.slug, "session_id": tournament.id}
