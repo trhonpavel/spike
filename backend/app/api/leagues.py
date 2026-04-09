@@ -279,6 +279,9 @@ async def get_team_composition(slug: str, db: AsyncSession = Depends(get_db)):
             slot_index=i,
             player1=LeaguePlayerOut.model_validate(p1) if p1 else None,
             player2=LeaguePlayerOut.model_validate(p2) if p2 else None,
+            locked=s.locked if s else False,
+            tentative=s.tentative if s else False,
+            note=s.note if s else None,
         ))
 
     unassigned = [
@@ -320,12 +323,18 @@ async def save_team_composition(
         if db_slot:
             db_slot.player1_id = slot.player1_id
             db_slot.player2_id = slot.player2_id
+            db_slot.locked = slot.locked
+            db_slot.tentative = slot.tentative
+            db_slot.note = slot.note
         else:
             db.add(LeagueTeamSlot(
                 league_id=league.id,
                 slot_index=slot.slot_index,
                 player1_id=slot.player1_id,
                 player2_id=slot.player2_id,
+                locked=slot.locked,
+                tentative=slot.tentative,
+                note=slot.note,
             ))
 
     await db.commit()

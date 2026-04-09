@@ -62,6 +62,9 @@ export interface TeamSlot {
   slot_index: number
   player1: LeaguePlayer | null
   player2: LeaguePlayer | null
+  locked: boolean
+  tentative: boolean
+  note: string | null
 }
 
 export interface TeamComposition {
@@ -142,7 +145,7 @@ export const leagueApi = {
   getTeams: (slug: string) =>
     request<TeamComposition>(`${BASE}/${slug}/teams`, { headers: headers() }),
 
-  saveTeams: (slug: string, slots: { slot_index: number; player1_id: number | null; player2_id: number | null }[], token: string) =>
+  saveTeams: (slug: string, slots: { slot_index: number; player1_id: number | null; player2_id: number | null; locked: boolean; tentative: boolean; note: string | null }[], token: string) =>
     request<TeamComposition>(`${BASE}/${slug}/teams`, {
       method: 'PUT',
       headers: headers(token),

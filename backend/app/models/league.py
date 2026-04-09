@@ -45,3 +45,6 @@ class LeagueTeamSlot(Base):
     slot_index: Mapped[int] = mapped_column(Integer)
     player1_id: Mapped[int | None] = mapped_column(ForeignKey("league_players.id", ondelete="SET NULL"), nullable=True)
     player2_id: Mapped[int | None] = mapped_column(ForeignKey("league_players.id", ondelete="SET NULL"), nullable=True)
+    locked: Mapped[bool] = mapped_column(Boolean, default=False)
+    tentative: Mapped[bool] = mapped_column(Boolean, default=False)
+    note: Mapped[str | None] = mapped_column(String(300), nullable=True)

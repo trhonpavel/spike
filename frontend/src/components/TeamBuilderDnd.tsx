@@ -53,12 +53,14 @@ export function DroppableSlot({
   isSelected,
   onTap,
   selectedPlayerId,
+  locked = false,
 }: {
   id: PositionId
   player: LeaguePlayer | undefined
   isSelected: boolean
   onTap: () => void
   selectedPlayerId: number | undefined
+  locked?: boolean
 }) {
   const { setNodeRef, isOver } = useDroppable({ id })
 
@@ -72,6 +74,8 @@ export function DroppableSlot({
       className={`relative rounded-xl border transition-all cursor-pointer min-h-[56px] ${
         isOver
           ? 'border-brand bg-brand/10'
+          : locked
+          ? 'border-green-500/50 bg-surface-3'
           : isSelected && !isOccupied
           ? 'border-brand/50 bg-brand/5'
           : isOccupied

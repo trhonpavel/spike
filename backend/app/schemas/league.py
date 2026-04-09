@@ -71,6 +71,9 @@ class TeamSlotOut(BaseModel):
     slot_index: int
     player1: LeaguePlayerOut | None
     player2: LeaguePlayerOut | None
+    locked: bool = False
+    tentative: bool = False
+    note: str | None = None
 
 
 class TeamCompositionOut(BaseModel):
@@ -82,6 +85,9 @@ class TeamSlotIn(BaseModel):
     slot_index: int
     player1_id: int | None = None
     player2_id: int | None = None
+    locked: bool = False
+    tentative: bool = False
+    note: str | None = None
 
 
 class TeamCompositionIn(BaseModel):
