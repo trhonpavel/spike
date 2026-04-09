@@ -252,7 +252,15 @@ export default function TeamBuilderPage() {
                           id={posId}
                           player={player}
                           isSelected={selectedPlayer !== null}
-                          onTap={() => player ? handlePlayerTap(player) : handleSlotTap(posId)}
+                          onTap={() => {
+                          if (selectedPlayer && selectedPlayer.id !== player?.id) {
+                            handleSlotTap(posId)
+                          } else if (player) {
+                            handlePlayerTap(player)
+                          } else {
+                            handleSlotTap(posId)
+                          }
+                        }}
                           selectedPlayerId={selectedPlayer?.id}
                         />
                       )
@@ -275,7 +283,15 @@ export default function TeamBuilderPage() {
                           id={posId}
                           player={player}
                           isSelected={selectedPlayer !== null}
-                          onTap={() => player ? handlePlayerTap(player) : handleSlotTap(posId)}
+                          onTap={() => {
+                          if (selectedPlayer && selectedPlayer.id !== player?.id) {
+                            handleSlotTap(posId)
+                          } else if (player) {
+                            handlePlayerTap(player)
+                          } else {
+                            handleSlotTap(posId)
+                          }
+                        }}
                           selectedPlayerId={selectedPlayer?.id}
                         />
                       </div>
