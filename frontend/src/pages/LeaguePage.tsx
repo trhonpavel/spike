@@ -34,6 +34,8 @@ export default function LeaguePage() {
   const [newPlayerName, setNewPlayerName] = useState('')
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null)
   const [editPlayerName, setEditPlayerName] = useState('')
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
+  const [editNoteValue, setEditNoteValue] = useState('')
   const [confirmAction, setConfirmAction] = useState<{
     title: string; description: string; variant: 'danger' | 'warning'; onConfirm: () => void
   } | null>(null)
@@ -57,11 +59,12 @@ export default function LeaguePage() {
   })
 
   const updatePlayerMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { name?: string; active?: boolean } }) =>
+    mutationFn: ({ id, data }: { id: number; data: { name?: string; active?: boolean; locked?: boolean; tentative?: boolean; note?: string | null } }) =>
       leagueApi.updatePlayer(slug!, id, data, token),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['league', slug] })
       setEditingPlayerId(null)
+      setEditingNoteId(null)
     },
     onError: (e: any) => setFormError(e.message),
   })
@@ -127,10 +130,18 @@ export default function LeaguePage() {
                   {i + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`font-medium truncate ${p.active ? 'text-white' : 'text-zinc-600'}`}>
                       {p.name}
                     </span>
+                    {p.locked && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-green-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                    {p.tentative && !p.locked && (
+                      <span className="font-display text-[10px] font-bold text-orange-400 border border-orange-500/30 px-1 rounded leading-4">?</span>
+                    )}
                     {!p.active && (
                       <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-700 border border-zinc-800 px-1 rounded">
                         inactive
@@ -140,6 +151,9 @@ export default function LeaguePage() {
                   <div className="text-xs text-zinc-600 mt-0.5">
                     {p.sessions_attended} sessions · {p.total_wins}W {p.total_losses}L · {winRate}% win
                   </div>
+                  {p.note && (
+                    <div className="text-xs text-zinc-500 mt-0.5 italic truncate">{p.note}</div>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   <div className="score-num text-lg text-blue-400">{p.elo_rating.toFixed(0)}</div>
@@ -205,9 +219,9 @@ export default function LeaguePage() {
           <p className="px-4 py-8 text-center text-zinc-600 text-sm">No players</p>
         ) : (
           league.players.map((p: LeaguePlayer) => (
-            <div key={p.id} className="px-4 py-3 flex items-center gap-3">
+            <div key={p.id} className="px-4 py-3 flex flex-col gap-1">
               {editingPlayerId === p.id ? (
-                <>
+                <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={editPlayerName}
@@ -231,28 +245,81 @@ export default function LeaguePage() {
                   >
                     Cancel
                   </button>
-                </>
+                </div>
               ) : (
-                <>
+                <div className="flex items-center gap-2">
                   <div className="flex-1 min-w-0">
-                    <span className={`text-sm truncate ${p.active ? 'text-white' : 'text-zinc-600 line-through'}`}>
-                      {p.name}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-sm font-medium truncate ${p.active ? 'text-white' : 'text-zinc-600 line-through'}`}>
+                        {p.name}
+                      </span>
+                      {p.locked && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-green-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      {p.tentative && !p.locked && (
+                        <span className="font-display text-[11px] font-bold text-orange-400 border border-orange-500/30 px-1 rounded leading-4">?</span>
+                      )}
+                    </div>
                   </div>
                   {admin && (
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      {/* Lock */}
+                      <button
+                        onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { locked: !p.locked, tentative: p.locked ? p.tentative : false } })}
+                        className={`p-2 transition-colors cursor-pointer rounded-lg ${p.locked ? 'text-green-500 bg-green-500/10' : 'text-zinc-600 hover:text-green-500'}`}
+                        title={p.locked ? 'Unlock' : 'Lock (confirmed)'}
+                      >
+                        {p.locked ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
+                          </svg>
+                        )}
+                      </button>
+                      {/* Tentative */}
+                      <button
+                        onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { tentative: !p.tentative, locked: p.tentative ? p.locked : false } })}
+                        className={`p-2 transition-colors cursor-pointer rounded-lg font-bold text-sm ${p.tentative ? 'text-orange-400 bg-orange-400/10' : 'text-zinc-600 hover:text-orange-400'}`}
+                        title={p.tentative ? 'Remove tentative' : 'Mark tentative'}
+                      >
+                        ?
+                      </button>
+                      {/* Note */}
+                      <button
+                        onClick={() => {
+                          if (editingNoteId === p.id) {
+                            setEditingNoteId(null)
+                          } else {
+                            setEditingNoteId(p.id)
+                            setEditNoteValue(p.note || '')
+                          }
+                        }}
+                        className={`p-2 transition-colors cursor-pointer rounded-lg ${p.note ? 'text-blue-400 bg-blue-400/10' : 'text-zinc-600 hover:text-blue-400'}`}
+                        title="Note"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      {/* Rename */}
                       <button
                         onClick={() => { setEditingPlayerId(p.id); setEditPlayerName(p.name); setFormError('') }}
-                        className="p-2 text-zinc-600 hover:text-brand transition-colors cursor-pointer"
+                        className="p-2 text-zinc-600 hover:text-brand transition-colors cursor-pointer rounded-lg"
                         title="Rename"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                         </svg>
                       </button>
+                      {/* Activate/Deactivate */}
                       <button
                         onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { active: !p.active } })}
-                        className={`p-2 transition-colors cursor-pointer ${p.active ? 'text-zinc-600 hover:text-accent-red' : 'text-zinc-700 hover:text-qualify'}`}
+                        className={`p-2 transition-colors cursor-pointer rounded-lg ${p.active ? 'text-zinc-600 hover:text-accent-red' : 'text-zinc-700 hover:text-qualify'}`}
                         title={p.active ? 'Deactivate' : 'Activate'}
                       >
                         {p.active ? (
@@ -267,7 +334,43 @@ export default function LeaguePage() {
                       </button>
                     </div>
                   )}
-                </>
+                </div>
+              )}
+              {/* Inline note editor */}
+              {editingNoteId === p.id && (
+                <div className="flex gap-2 mt-1 ml-0">
+                  <input
+                    type="text"
+                    value={editNoteValue}
+                    onChange={e => setEditNoteValue(e.target.value)}
+                    placeholder="Add note..."
+                    maxLength={300}
+                    className="flex-1 px-3 py-1.5 bg-surface-3 border border-blue-400/40 rounded-lg text-white text-sm focus:outline-none placeholder-zinc-600"
+                    autoFocus
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') updatePlayerMutation.mutate({ id: p.id, data: { note: editNoteValue.trim() || null } })
+                      if (e.key === 'Escape') setEditingNoteId(null)
+                    }}
+                  />
+                  <button
+                    onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { note: editNoteValue.trim() || null } })}
+                    className="px-2.5 py-1.5 rounded-lg bg-blue-500 text-white font-display text-xs font-bold uppercase cursor-pointer"
+                  >
+                    OK
+                  </button>
+                  {p.note && (
+                    <button
+                      onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { note: null } })}
+                      className="px-2.5 py-1.5 rounded-lg border border-border text-zinc-500 font-display text-xs font-bold uppercase cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              )}
+              {/* Note display (non-admin view) */}
+              {!admin && p.note && (
+                <div className="text-xs text-zinc-500 italic ml-0">{p.note}</div>
               )}
             </div>
           ))

@@ -13,6 +13,9 @@ class LeaguePlayerCreate(BaseModel):
 class LeaguePlayerUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     active: bool | None = None
+    locked: bool | None = None
+    tentative: bool | None = None
+    note: str | None = Field(default=None, max_length=300)
 
 
 class LeaguePlayerOut(BaseModel):
@@ -27,6 +30,9 @@ class LeaguePlayerOut(BaseModel):
     total_point_differential: int
     sessions_attended: int
     active: bool
+    locked: bool = False
+    tentative: bool = False
+    note: str | None = None
 
     model_config = {"from_attributes": True}
 

@@ -29,6 +29,9 @@ export interface LeaguePlayer {
   total_point_differential: number
   sessions_attended: number
   active: boolean
+  locked: boolean
+  tentative: boolean
+  note: string | null
 }
 
 export interface LeagueSession {
@@ -116,7 +119,7 @@ export const leagueApi = {
   updatePlayer: (
     slug: string,
     playerId: number,
-    data: { name?: string; active?: boolean },
+    data: { name?: string; active?: boolean; locked?: boolean; tentative?: boolean; note?: string | null },
     token: string,
   ) =>
     request<LeaguePlayer>(`${BASE}/${slug}/players/${playerId}`, {

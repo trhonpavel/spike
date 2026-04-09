@@ -164,6 +164,17 @@ async def update_league_player(
     if data.active is not None:
         player.active = data.active
 
+    if data.locked is not None:
+        player.locked = data.locked
+
+    if data.tentative is not None:
+        player.tentative = data.tentative
+
+    if data.note is not None:
+        player.note = data.note
+    elif 'note' in data.model_fields_set:
+        player.note = None
+
     await db.commit()
     await db.refresh(player)
     return player

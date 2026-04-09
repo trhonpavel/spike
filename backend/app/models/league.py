@@ -34,6 +34,9 @@ class LeaguePlayer(Base):
     total_point_differential: Mapped[int] = mapped_column(Integer, default=0)
     sessions_attended: Mapped[int] = mapped_column(Integer, default=0)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    locked: Mapped[bool] = mapped_column(Boolean, default=False)
+    tentative: Mapped[bool] = mapped_column(Boolean, default=False)
+    note: Mapped[str | None] = mapped_column(String(300), nullable=True)
 
 
 class LeagueTeamSlot(Base):
