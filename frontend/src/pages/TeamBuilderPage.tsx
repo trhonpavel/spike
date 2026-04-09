@@ -106,8 +106,18 @@ export default function TeamBuilderPage() {
   const updatePlayerMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: { locked?: boolean; tentative?: boolean; note?: string | null } }) =>
       leagueApi.updatePlayer(slug!, id, data, token),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['league-teams', slug] })
+    onSuccess: (updated) => {
+      // Update player in local assignment state immediately
+      setAssignment(prev => {
+        if (!prev) return prev
+        const next = { ...prev }
+        for (const posId of Object.keys(next)) {
+          if (next[posId]?.id === updated.id) {
+            next[posId] = updated
+          }
+        }
+        return next
+      })
       queryClient.invalidateQueries({ queryKey: ['league', slug] })
       setEditingPlayerNote(null)
     },
