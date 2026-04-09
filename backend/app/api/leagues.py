@@ -6,12 +6,13 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.league import League, LeaguePlayer
+from app.models.league import League, LeaguePlayer, LeagueTeamSlot
 from app.models.tournament import Tournament, Player, Round, RoundStatus
 from app.schemas.league import (
     LeagueCreate, LeagueOut, LeagueDetailOut,
     LeaguePlayerCreate, LeaguePlayerUpdate, LeaguePlayerOut,
     LeagueSessionCreate, LeagueSessionOut,
+    TeamCompositionOut, TeamCompositionIn, TeamSlotOut,
 )
 from app.config import settings
 
@@ -244,6 +245,93 @@ async def create_session(
     await db.commit()
     await db.refresh(tournament)
     return {"tournament_slug": tournament.slug, "session_id": tournament.id}
+
+
+@router.get("/{slug}/teams", response_model=TeamCompositionOut)
+async def get_team_composition(slug: str, db: AsyncSession = Depends(get_db)):
+    league = await _get_league(db, slug)
+
+    players_result = await db.execute(
+        select(LeaguePlayer)
+        .where(LeaguePlayer.league_id == league.id, LeaguePlayer.active == True)
+        .order_by(LeaguePlayer.elo_rating.desc())
+    )
+    all_players = {p.id: p for p in players_result.scalars().all()}
+
+    slots_result = await db.execute(
+        select(LeagueTeamSlot)
+        .where(LeagueTeamSlot.league_id == league.id)
+        .order_by(LeagueTeamSlot.slot_index)
+    )
+    db_slots = {s.slot_index: s for s in slots_result.scalars().all()}
+
+    assigned_ids: set[int] = set()
+    slots: list[TeamSlotOut] = []
+    for i in range(7):
+        s = db_slots.get(i)
+        p1 = all_players.get(s.player1_id) if s and s.player1_id else None
+        p2 = all_players.get(s.player2_id) if s and s.player2_id else None
+        if p1:
+            assigned_ids.add(p1.id)
+        if p2:
+            assigned_ids.add(p2.id)
+        slots.append(TeamSlotOut(
+            slot_index=i,
+            player1=LeaguePlayerOut.model_validate(p1) if p1 else None,
+            player2=LeaguePlayerOut.model_validate(p2) if p2 else None,
+        ))
+
+    unassigned = [
+        LeaguePlayerOut.model_validate(p)
+        for p in all_players.values()
+        if p.id not in assigned_ids
+    ]
+
+    return TeamCompositionOut(slots=slots, unassigned=unassigned)
+
+
+@router.put("/{slug}/teams", response_model=TeamCompositionOut)
+async def save_team_composition(
+    slug: str,
+    data: TeamCompositionIn,
+    db: AsyncSession = Depends(get_db),
+    x_admin_token: str | None = Header(None),
+):
+    league = await _get_league(db, slug)
+    _verify_league_admin(league, x_admin_token)
+
+    # Validate slot indices
+    for slot in data.slots:
+        if not (0 <= slot.slot_index <= 6):
+            raise HTTPException(400, f"Invalid slot_index {slot.slot_index}")
+        # Alternates (5,6) cannot have player2
+        if slot.slot_index >= 5 and slot.player2_id is not None:
+            raise HTTPException(400, "Alternates can only have one player")
+
+    # Upsert slots
+    for slot in data.slots:
+        existing = await db.execute(
+            select(LeagueTeamSlot).where(
+                LeagueTeamSlot.league_id == league.id,
+                LeagueTeamSlot.slot_index == slot.slot_index,
+            )
+        )
+        db_slot = existing.scalar_one_or_none()
+        if db_slot:
+            db_slot.player1_id = slot.player1_id
+            db_slot.player2_id = slot.player2_id
+        else:
+            db.add(LeagueTeamSlot(
+                league_id=league.id,
+                slot_index=slot.slot_index,
+                player1_id=slot.player1_id,
+                player2_id=slot.player2_id,
+            ))
+
+    await db.commit()
+
+    # Return updated composition
+    return await get_team_composition(slug, db)
 
 
 @router.post("/{slug}/sessions/{tournament_id}/close", status_code=200)

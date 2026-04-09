@@ -9,6 +9,7 @@ import StandingsPage from './pages/StandingsPage'
 import AdminPage from './pages/AdminPage'
 import TournamentsPage from './pages/TournamentsPage'
 import LeaguePage from './pages/LeaguePage'
+import TeamBuilderPage from './pages/TeamBuilderPage'
 import PasswordGate from './components/PasswordGate'
 import ToastContainer from './components/ToastContainer'
 
@@ -34,6 +35,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/tournaments" element={<TournamentsPage />} />
             <Route path="/l/:slug" element={<LeaguePage />} />
+            <Route path="/l/:slug/teams" element={<TeamBuilderPage />} />
           </Routes>
         </BrowserRouter>
       </PasswordGate>

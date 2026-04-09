@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Integer, Float, Boolean, ForeignKey, DateTime
+from sqlalchemy import String, Integer, Float, Boolean, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -34,3 +34,14 @@ class LeaguePlayer(Base):
     total_point_differential: Mapped[int] = mapped_column(Integer, default=0)
     sessions_attended: Mapped[int] = mapped_column(Integer, default=0)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class LeagueTeamSlot(Base):
+    __tablename__ = "league_team_slots"
+    __table_args__ = (UniqueConstraint("league_id", "slot_index", name="uq_league_team_slot"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    league_id: Mapped[int] = mapped_column(ForeignKey("leagues.id", ondelete="CASCADE"))
+    slot_index: Mapped[int] = mapped_column(Integer)
+    player1_id: Mapped[int | None] = mapped_column(ForeignKey("league_players.id", ondelete="SET NULL"), nullable=True)
+    player2_id: Mapped[int | None] = mapped_column(ForeignKey("league_players.id", ondelete="SET NULL"), nullable=True)

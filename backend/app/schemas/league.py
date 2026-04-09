@@ -65,3 +65,24 @@ class LeagueDetailOut(BaseModel):
     player_count: int
     sessions: list[LeagueSessionOut]
     players: list[LeaguePlayerOut]
+
+
+class TeamSlotOut(BaseModel):
+    slot_index: int
+    player1: LeaguePlayerOut | None
+    player2: LeaguePlayerOut | None
+
+
+class TeamCompositionOut(BaseModel):
+    slots: list[TeamSlotOut]
+    unassigned: list[LeaguePlayerOut]
+
+
+class TeamSlotIn(BaseModel):
+    slot_index: int
+    player1_id: int | None = None
+    player2_id: int | None = None
+
+
+class TeamCompositionIn(BaseModel):
+    slots: list[TeamSlotIn]

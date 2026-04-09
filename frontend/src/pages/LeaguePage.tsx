@@ -519,6 +519,14 @@ export default function LeaguePage() {
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {slug === 'world' && (
+              <Link
+                to={`/l/${slug}/teams`}
+                className="px-3 py-1.5 rounded-xl text-xs font-display font-bold uppercase tracking-wider border border-brand/30 text-brand hover:bg-brand/5 transition-all cursor-pointer"
+              >
+                Teams
+              </Link>
+            )}
             {admin && (
               <button
                 onClick={() => {
