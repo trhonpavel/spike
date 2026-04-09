@@ -92,7 +92,7 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <img src="/img/czech-roundnet.svg" alt="Czech Roundnet" className="h-7 home-czech-logo" />
         </div>
-        <button
+        <button type="button"
           onClick={toggleTheme}
           className="p-2 rounded-lg text-zinc-500 hover:text-brand transition-colors cursor-pointer"
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -142,7 +142,7 @@ export default function HomePage() {
             {/* Tab bar */}
             <div className="flex border-b border-border">
               {tabs.map((t) => (
-                <button
+                <button type="button"
                   key={t.key}
                   onClick={() => setActiveTab(t.key)}
                   className={`flex-1 py-3 font-display text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
@@ -239,7 +239,7 @@ export default function HomePage() {
               Share the link so players can follow live
             </p>
             <span className="text-zinc-700">|</span>
-            <button
+            <button type="button"
               onClick={() => navigate('/tournaments')}
               className="text-xs text-zinc-500 hover:text-brand transition-colors cursor-pointer"
             >

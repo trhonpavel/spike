@@ -192,7 +192,7 @@ export default function LeaguePage() {
                 <div className="text-xs text-zinc-600 mt-0.5">{s.player_count} players</div>
               </Link>
               {admin && s.status === 'active' && (
-                <button
+                <button type="button"
                   onClick={() => setConfirmAction({
                     title: 'Close session?',
                     description: 'Results will be written to the league standings. This cannot be undone.',
@@ -233,13 +233,13 @@ export default function LeaguePage() {
                       if (e.key === 'Escape') setEditingPlayerId(null)
                     }}
                   />
-                  <button
+                  <button type="button"
                     onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { name: editPlayerName } })}
                     className="px-2.5 py-1.5 rounded-lg bg-brand text-black font-display text-xs font-bold uppercase cursor-pointer"
                   >
                     OK
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => setEditingPlayerId(null)}
                     className="px-2.5 py-1.5 rounded-lg border border-border text-zinc-500 font-display text-xs font-bold uppercase cursor-pointer"
                   >
@@ -266,7 +266,7 @@ export default function LeaguePage() {
                   {admin && (
                     <div className="flex items-center gap-0.5 shrink-0">
                       {/* Lock */}
-                      <button
+                      <button type="button"
                         onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { locked: !p.locked, tentative: p.locked ? p.tentative : false } })}
                         className={`p-2 transition-colors cursor-pointer rounded-lg ${p.locked ? 'text-green-500 bg-green-500/10' : 'text-zinc-600 hover:text-green-500'}`}
                         title={p.locked ? 'Unlock' : 'Lock (confirmed)'}
@@ -282,7 +282,7 @@ export default function LeaguePage() {
                         )}
                       </button>
                       {/* Tentative */}
-                      <button
+                      <button type="button"
                         onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { tentative: !p.tentative, locked: p.tentative ? p.locked : false } })}
                         className={`p-2 transition-colors cursor-pointer rounded-lg font-bold text-sm ${p.tentative ? 'text-orange-400 bg-orange-400/10' : 'text-zinc-600 hover:text-orange-400'}`}
                         title={p.tentative ? 'Remove tentative' : 'Mark tentative'}
@@ -290,7 +290,7 @@ export default function LeaguePage() {
                         ?
                       </button>
                       {/* Note */}
-                      <button
+                      <button type="button"
                         onClick={() => {
                           if (editingNoteId === p.id) {
                             setEditingNoteId(null)
@@ -307,7 +307,7 @@ export default function LeaguePage() {
                         </svg>
                       </button>
                       {/* Rename */}
-                      <button
+                      <button type="button"
                         onClick={() => { setEditingPlayerId(p.id); setEditPlayerName(p.name); setFormError('') }}
                         className="p-2 text-zinc-600 hover:text-brand transition-colors cursor-pointer rounded-lg"
                         title="Rename"
@@ -317,7 +317,7 @@ export default function LeaguePage() {
                         </svg>
                       </button>
                       {/* Activate/Deactivate */}
-                      <button
+                      <button type="button"
                         onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { active: !p.active } })}
                         className={`p-2 transition-colors cursor-pointer rounded-lg ${p.active ? 'text-zinc-600 hover:text-accent-red' : 'text-zinc-700 hover:text-qualify'}`}
                         title={p.active ? 'Deactivate' : 'Activate'}
@@ -352,14 +352,14 @@ export default function LeaguePage() {
                       if (e.key === 'Escape') setEditingNoteId(null)
                     }}
                   />
-                  <button
+                  <button type="button"
                     onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { note: editNoteValue.trim() || null } })}
                     className="px-2.5 py-1.5 rounded-lg bg-blue-500 text-white font-display text-xs font-bold uppercase cursor-pointer"
                   >
                     OK
                   </button>
                   {p.note && (
-                    <button
+                    <button type="button"
                       onClick={() => updatePlayerMutation.mutate({ id: p.id, data: { note: null } })}
                       className="px-2.5 py-1.5 rounded-lg border border-border text-zinc-500 font-display text-xs font-bold uppercase cursor-pointer"
                     >
@@ -395,14 +395,14 @@ export default function LeaguePage() {
               />
               {formError && <p className="text-accent-red text-xs">{formError}</p>}
               <div className="flex gap-2">
-                <button
+                <button type="button"
                   onClick={() => newPlayerName.trim() && addPlayerMutation.mutate(newPlayerName.trim())}
                   disabled={!newPlayerName.trim() || addPlayerMutation.isPending}
                   className="btn-brand px-4 py-2 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 cursor-pointer"
                 >
                   Add
                 </button>
-                <button
+                <button type="button"
                   onClick={() => { setShowAddPlayer(false); setFormError('') }}
                   className="px-4 py-2 rounded-xl border border-border text-zinc-500 font-display text-sm font-bold uppercase tracking-wider cursor-pointer"
                 >
@@ -411,7 +411,7 @@ export default function LeaguePage() {
               </div>
             </div>
           ) : (
-            <button
+            <button type="button"
               onClick={() => { setShowAddPlayer(true); setFormError('') }}
               className="w-full py-3 rounded-2xl border border-dashed border-border text-zinc-600 hover:text-brand hover:border-brand/30 text-sm font-display font-bold uppercase tracking-wider transition-all cursor-pointer"
             >
@@ -464,7 +464,7 @@ export default function LeaguePage() {
                   { value: 2, label: '2 matches', sub: 'medium' },
                   { value: 3, label: '3 matches', sub: 'round-robin' },
                 ].map(opt => (
-                  <button
+                  <button type="button"
                     key={opt.value}
                     onClick={() => setMatchesPerGroup(opt.value)}
                     className={`flex-1 py-2 px-1 rounded-xl border text-center transition-all cursor-pointer ${
@@ -485,7 +485,7 @@ export default function LeaguePage() {
                 <label className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">
                   Who attended ({attendingIds.size}/{activePlayers.length})
                 </label>
-                <button
+                <button type="button"
                   onClick={toggleAll}
                   className="font-display text-[10px] font-bold uppercase tracking-widest text-brand cursor-pointer"
                 >
@@ -494,7 +494,7 @@ export default function LeaguePage() {
               </div>
               <div className="space-y-1">
                 {activePlayers.map(p => (
-                  <button
+                  <button type="button"
                     key={p.id}
                     onClick={() => {
                       const next = new Set(attendingIds)
@@ -562,7 +562,7 @@ export default function LeaguePage() {
                   placeholder="Player name..."
                   className="flex-1 px-3 py-2 bg-surface-3 border border-border rounded-xl text-white placeholder-zinc-700 text-sm focus:outline-none focus:border-brand/50 transition-all"
                 />
-                <button
+                <button type="button"
                   onClick={() => {
                     const name = newPlayerInput.trim()
                     if (name && !newPlayerNames.includes(name) && !activePlayers.some(p => p.name === name)) {
@@ -583,7 +583,7 @@ export default function LeaguePage() {
                       <span className="text-sm text-white">{name}</span>
                       <div className="flex items-center gap-2">
                         <span className="font-display text-[9px] font-bold uppercase tracking-widest text-brand">new</span>
-                        <button
+                        <button type="button"
                           onClick={() => setNewPlayerNames(newPlayerNames.filter(n => n !== name))}
                           className="text-zinc-500 hover:text-accent-red transition-colors cursor-pointer text-sm"
                         >✕</button>
@@ -597,14 +597,14 @@ export default function LeaguePage() {
             {formError && <p className="text-accent-red text-xs">{formError}</p>}
           </div>
           <div className="px-5 py-4 border-t border-border flex gap-2">
-            <button
+            <button type="button"
               onClick={() => createSessionMutation.mutate()}
               disabled={attendingIds.size + newPlayerNames.length < 4 || createSessionMutation.isPending}
               className="btn-brand flex-1 py-3 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
               {createSessionMutation.isPending ? 'Creating...' : `Start (${attendingIds.size + newPlayerNames.length} players)`}
             </button>
-            <button
+            <button type="button"
               onClick={() => { setShowNewSession(false); setFormError(''); setNewPlayerNames([]); setNewPlayerInput('') }}
               className="px-4 py-3 rounded-xl border border-border text-zinc-500 font-display text-sm font-bold uppercase tracking-wider cursor-pointer"
             >
@@ -646,7 +646,7 @@ export default function LeaguePage() {
               </Link>
             )}
             {admin && (
-              <button
+              <button type="button"
                 onClick={() => {
                   setAttendingIds(new Set(activePlayers.map(p => p.id)))
                   setSessionDate(new Date().toISOString().slice(0, 10))
@@ -660,7 +660,7 @@ export default function LeaguePage() {
               </button>
             )}
             {admin && !appAuth && (
-              <button
+              <button type="button"
                 onClick={() => { clearLeagueToken(slug); window.location.reload() }}
                 className="px-3 py-1.5 rounded-lg font-display text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-accent-red border border-border hover:border-accent-red/30 transition-all cursor-pointer"
               >
@@ -674,7 +674,7 @@ export default function LeaguePage() {
         <div className="max-w-2xl mx-auto px-4 pb-0">
           <div className="flex gap-1">
             {tabs.map(t => (
-              <button
+              <button type="button"
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={`px-4 py-2.5 font-display text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border-b-2 ${

@@ -127,7 +127,7 @@ export default function TournamentPage() {
 
           <div className="flex items-center gap-2 shrink-0">
             {/* Theme toggle */}
-            <button
+            <button type="button"
               onClick={toggleTheme}
               className="p-2 rounded-lg text-zinc-500 hover:text-brand transition-colors cursor-pointer"
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -144,7 +144,7 @@ export default function TournamentPage() {
             </button>
 
             {/* Share */}
-            <button
+            <button type="button"
               onClick={handleShare}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold font-display uppercase tracking-wider transition-all cursor-pointer ${
                 copied
@@ -171,7 +171,7 @@ export default function TournamentPage() {
         <div className="hidden sm:block max-w-2xl mx-auto px-4 pb-2">
           <nav className="flex gap-1">
             {tabItems.map((t) => (
-              <button
+              <button type="button"
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-display text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
@@ -205,7 +205,7 @@ export default function TournamentPage() {
            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <div className="flex">
           {tabItems.map((t) => (
-            <button
+            <button type="button"
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`flex-1 flex flex-col items-center gap-1 pt-3 pb-2 cursor-pointer transition-colors ${

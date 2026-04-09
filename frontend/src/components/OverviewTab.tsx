@@ -153,7 +153,7 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
 
       {/* Current round card */}
       {latestRound ? (
-        <button
+        <button type="button"
           onClick={() => onSwitchTab('rounds')}
           className="w-full bg-surface-2 rounded-2xl border border-border p-4 text-left transition-colors hover:bg-surface-3/50 cursor-pointer"
         >
@@ -211,7 +211,7 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
 
       {/* Admin action strip */}
       {adminAction && (
-        <button
+        <button type="button"
           onClick={adminAction.onClick}
           disabled={anyMutating}
           className={`w-full py-4 rounded-2xl font-display text-base font-bold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] ${adminAction.style}`}
@@ -255,7 +255,7 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
               </div>
             ))}
           </div>
-          <button
+          <button type="button"
             onClick={() => onSwitchTab('standings')}
             className="w-full mt-2 py-2.5 rounded-xl font-display text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-brand border border-border hover:border-brand/30 transition-all cursor-pointer"
           >

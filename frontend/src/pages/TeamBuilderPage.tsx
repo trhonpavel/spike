@@ -291,7 +291,7 @@ export default function TeamBuilderPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <button type="button"
               onClick={resetAll}
               className="px-3 py-2 rounded-xl border border-border text-zinc-500 hover:text-accent-red hover:border-accent-red/30 font-display text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
               title="Reset all slots"
@@ -299,7 +299,7 @@ export default function TeamBuilderPage() {
               Reset
             </button>
             {isAdmin && (
-              <button
+              <button type="button"
                 onClick={() => saveMutation.mutate()}
                 disabled={saveMutation.isPending}
                 className="btn-brand px-4 py-2 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 cursor-pointer"
@@ -364,7 +364,7 @@ export default function TeamBuilderPage() {
 
                       {/* Annotation buttons */}
                       <div className="flex items-center gap-1">
-                        <button
+                        <button type="button"
                           onClick={() => toggleAnnotation(i, 'locked')}
                           className={`p-1.5 rounded-lg transition-all cursor-pointer ${isLocked ? 'text-qualify bg-qualify/10' : 'text-zinc-600 hover:text-qualify'}`}
                           title="Lock — confirmed"
@@ -373,7 +373,7 @@ export default function TeamBuilderPage() {
                             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                           </svg>
                         </button>
-                        <button
+                        <button type="button"
                           onClick={() => toggleAnnotation(i, 'tentative')}
                           className={`p-1.5 rounded-lg transition-all cursor-pointer ${isTentative ? 'text-status-draft bg-status-draft/10' : 'text-zinc-600 hover:text-status-draft'}`}
                           title="Tentative — unsure"
@@ -382,7 +382,7 @@ export default function TeamBuilderPage() {
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                           </svg>
                         </button>
-                        <button
+                        <button type="button"
                           onClick={() => setEditingNote(editingNote === i ? null : i)}
                           className={`p-1.5 rounded-lg transition-all cursor-pointer ${ann.note ? 'text-accent-blue bg-accent-blue/10' : 'text-zinc-600 hover:text-accent-blue'}`}
                           title="Note"

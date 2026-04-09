@@ -116,7 +116,7 @@ export default function PlayerDetailModal({ player, slug, onClose }: Props) {
     >
       <div className="max-w-md mx-auto px-5 pt-4 pb-8">
         {/* Back button — first thing visible */}
-        <button
+        <button type="button"
           onClick={onClose}
           className="flex items-center gap-1.5 mb-5 text-zinc-400 hover:text-brand transition-colors cursor-pointer"
         >

@@ -40,7 +40,7 @@ export default function StandingsPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {/* Theme toggle */}
-            <button
+            <button type="button"
               onClick={toggleTheme}
               className="p-2 rounded-lg text-zinc-500 hover:text-brand transition-colors cursor-pointer"
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}

@@ -68,7 +68,7 @@ export default function ManualDrawModal({ players, onConfirm, onCancel, isPendin
                 </div>
                 <div className="flex flex-wrap gap-1.5 min-h-[28px]">
                   {groupPlayers.map(p => (
-                    <button key={p.id} onClick={() => tap(p.id)}
+                    <button type="button" key={p.id} onClick={() => tap(p.id)}
                       className="px-2.5 py-1 rounded-lg bg-surface-2 border border-border text-white text-xs font-medium hover:border-accent-red/40 hover:text-accent-red transition-all cursor-pointer">
                       {p.name} ✕
                     </button>
@@ -88,7 +88,7 @@ export default function ManualDrawModal({ players, onConfirm, onCancel, isPendin
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {unassigned.map(p => (
-                  <button key={p.id} onClick={() => tap(p.id)} disabled={currentGroupIdx < 0}
+                  <button type="button" key={p.id} onClick={() => tap(p.id)} disabled={currentGroupIdx < 0}
                     className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
                       currentGroupIdx >= 0
                         ? 'border-border bg-surface-3 text-zinc-300 hover:border-brand/50 hover:bg-brand/10 hover:text-white cursor-pointer'
@@ -106,11 +106,11 @@ export default function ManualDrawModal({ players, onConfirm, onCancel, isPendin
         </div>
 
         <div className="px-5 py-4 border-t border-border flex gap-2">
-          <button onClick={handleSubmit} disabled={!canSubmit}
+          <button type="button" onClick={handleSubmit} disabled={!canSubmit}
             className="btn-brand flex-1 py-3 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
             {isPending ? 'Creating...' : `Start (${completeCount * 4} players)`}
           </button>
-          <button onClick={onCancel}
+          <button type="button" onClick={onCancel}
             className="px-4 py-3 rounded-xl border border-border text-zinc-500 font-display text-sm font-bold uppercase tracking-wider cursor-pointer">
             Cancel
           </button>

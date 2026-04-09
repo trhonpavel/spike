@@ -126,7 +126,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
         </div>
         <div className="flex items-center gap-2">
           {admin && (
-            <button
+            <button type="button"
               onClick={() => setShowBulkImport(!showBulkImport)}
               className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-brand px-2.5 py-1 rounded-lg border border-border hover:border-brand/30 transition-all cursor-pointer"
             >
@@ -154,14 +154,14 @@ export default function PlayersTab({ slug, admin, token }: Props) {
             className="w-full px-4 py-3 bg-surface-3 border border-border rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:border-brand/50 transition-all text-sm resize-none h-28"
           />
           <div className="flex gap-2">
-            <button
+            <button type="button"
               onClick={handleBulkImport}
               disabled={bulkMutation.isPending || !bulkText.trim()}
               className="btn-brand px-5 py-2.5 rounded-xl font-display font-bold text-sm uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
             >
               {bulkMutation.isPending ? 'Importing...' : 'Import'}
             </button>
-            <button
+            <button type="button"
               onClick={() => { setShowBulkImport(false); setBulkText('') }}
               className="px-5 py-2.5 rounded-xl font-display font-bold text-sm uppercase tracking-wider text-zinc-500 border border-border hover:bg-surface-3 transition-all cursor-pointer"
             >
@@ -268,14 +268,14 @@ export default function PlayersTab({ slug, admin, token }: Props) {
               </div>
               {editingId === p.id ? (
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
+                  <button type="button"
                     onClick={saveEdit}
                     disabled={renameMutation.isPending || !editName.trim()}
                     className="px-2.5 py-1 rounded-lg bg-qualify/20 text-qualify font-display text-[10px] font-bold uppercase tracking-wider hover:bg-qualify/30 transition-colors cursor-pointer disabled:opacity-30"
                   >
                     Save
                   </button>
-                  <button
+                  <button type="button"
                     onClick={cancelEdit}
                     className="px-2.5 py-1 rounded-lg text-zinc-500 font-display text-[10px] font-bold uppercase tracking-wider hover:text-zinc-300 transition-colors cursor-pointer"
                   >
@@ -292,7 +292,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
                   {admin && (
                     <div className="flex items-center shrink-0">
                       {p.active && (
-                        <button
+                        <button type="button"
                           onClick={(e) => startEdit(e, p)}
                           className="p-2 text-zinc-700 hover:text-brand transition-colors cursor-pointer"
                           aria-label={`Rename ${p.name}`}
@@ -303,7 +303,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
                         </button>
                       )}
                       {/* Toggle active — always visible */}
-                      <button
+                      <button type="button"
                         onClick={(e) => {
                           e.stopPropagation()
                           toggleActiveMutation.mutate({ id: p.id, active: !p.active })
@@ -325,7 +325,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
                       </button>
                       {/* Delete — only if never been in any round */}
                       {p.games_played === 0 && p.waitings === 0 && (
-                        <button
+                        <button type="button"
                           onClick={(e) => {
                             e.stopPropagation()
                             setRemoveTarget(p)

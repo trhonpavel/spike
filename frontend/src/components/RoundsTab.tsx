@@ -120,7 +120,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
       {/* Draw CTA */}
       {admin && canDraw && (
         <div className="flex gap-2">
-          <button
+          <button type="button"
             onClick={() => drawMutation.mutate()}
             disabled={drawMutation.isPending}
             className="flex-1 py-4 rounded-2xl font-display text-lg font-bold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] neon-box border border-brand/30 bg-gradient-to-r from-brand/15 via-brand/10 to-brand/15 text-brand hover:from-brand/20 hover:to-brand/20 anim-gradient"
@@ -132,7 +132,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
               </span>
             ) : '+ Auto Draw'}
           </button>
-          <button
+          <button type="button"
             onClick={() => setShowManualDraw(true)}
             className="px-5 py-4 rounded-2xl font-display text-sm font-bold uppercase tracking-wider border border-border text-zinc-400 hover:text-white hover:border-zinc-500 transition-all cursor-pointer"
           >
@@ -175,7 +175,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
               </div>
               {/* Delete button for non-finalized rounds */}
               {admin && round.status !== 'finalized' && (
-                <button
+                <button type="button"
                   onClick={() => setDeleteTarget(round.id)}
                   disabled={deleteMutation.isPending}
                   className="p-2 text-zinc-500 hover:text-accent-red transition-colors cursor-pointer disabled:opacity-30"
@@ -188,7 +188,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
               )}
               {/* Undo button for last finalized round */}
               {admin && round.status === 'finalized' && round.id === lastFinalizedId && (
-                <button
+                <button type="button"
                   onClick={() => setUnfinalizeTarget(round.id)}
                   disabled={unfinalizeMutation.isPending}
                   className="p-2 text-zinc-500 hover:text-status-draft transition-colors cursor-pointer disabled:opacity-30"
@@ -212,7 +212,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
 
             {/* Action buttons */}
             {admin && round.status === 'drawn' && (
-              <button
+              <button type="button"
                 onClick={() => confirmMutation.mutate(round.id)}
                 disabled={confirmMutation.isPending}
                 className="w-full py-3 border border-accent-blue/30 text-accent-blue font-display font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-accent-blue/10 transition-all cursor-pointer disabled:opacity-30"
@@ -222,7 +222,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
             )}
 
             {admin && round.status === 'confirmed' && allScoresEntered(round) && (
-              <button
+              <button type="button"
                 onClick={() => setFinalizeTarget(round.id)}
                 disabled={finalizeMutation.isPending}
                 className="w-full py-3 border border-qualify/30 text-qualify font-display font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-qualify/10 transition-all cursor-pointer disabled:opacity-30"

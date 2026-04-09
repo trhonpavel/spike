@@ -132,7 +132,7 @@ export function DroppableSlot({
             {(onLock || onTentative || onNote) && (
               <div className="flex items-center gap-0.5 shrink-0">
                 {onLock && (
-                  <button
+                  <button type="button"
                     onClick={onLock}
                     className={`p-1 rounded transition-colors cursor-pointer ${player!.locked ? 'text-green-500' : 'text-zinc-600 hover:text-green-500'}`}
                     title={player!.locked ? 'Unlock' : 'Lock'}
@@ -143,14 +143,14 @@ export function DroppableSlot({
                   </button>
                 )}
                 {onTentative && (
-                  <button
+                  <button type="button"
                     onClick={onTentative}
                     className={`p-1 rounded transition-colors cursor-pointer font-bold text-sm leading-none ${player!.tentative ? 'text-orange-400' : 'text-zinc-600 hover:text-orange-400'}`}
                     title={player!.tentative ? 'Remove tentative' : 'Mark tentative'}
                   >?</button>
                 )}
                 {onNote && (
-                  <button
+                  <button type="button"
                     onClick={onNote}
                     className={`p-1 rounded transition-colors cursor-pointer ${player!.note ? 'text-blue-400' : 'text-zinc-600 hover:text-blue-400'}`}
                     title="Note"

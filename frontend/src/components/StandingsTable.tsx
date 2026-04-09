@@ -77,7 +77,7 @@ export default function StandingsTable({ slug }: Props) {
       {/* Sort controls */}
       <div className="flex items-center justify-center gap-1 bg-surface-2 rounded-xl p-1 border border-border">
         {SORT_OPTIONS.map((opt) => (
-          <button
+          <button type="button"
             key={opt.value}
             onClick={() => setSortBy(opt.value)}
             className={`flex-1 px-3 py-1.5 rounded-lg font-display text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${

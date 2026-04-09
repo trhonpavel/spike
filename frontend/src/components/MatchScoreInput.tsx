@@ -67,7 +67,7 @@ export default function MatchScoreInput({ match, slug, admin, token }: Props) {
 
         {/* Edit button */}
         {admin && (
-          <button
+          <button type="button"
             onClick={() => { setScore1(s1); setScore2(s2); setEditing(true) }}
             className="p-2 text-zinc-700 hover:text-brand transition-colors cursor-pointer"
             aria-label="Edit score"
@@ -121,7 +121,7 @@ export default function MatchScoreInput({ match, slug, admin, token }: Props) {
 
       {/* Actions */}
       <div className="flex gap-2 pt-1">
-        <button
+        <button type="button"
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
           className="btn-brand flex-1 py-3.5 rounded-xl text-sm font-display font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
@@ -134,7 +134,7 @@ export default function MatchScoreInput({ match, slug, admin, token }: Props) {
           ) : 'Save Score'}
         </button>
         {editing && (
-          <button
+          <button type="button"
             onClick={() => { setEditing(false); setScore1(match.score_team1 ?? 0); setScore2(match.score_team2 ?? 0) }}
             className="px-5 py-3.5 text-zinc-500 hover:text-white font-display font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-surface-3 transition-all cursor-pointer"
           >

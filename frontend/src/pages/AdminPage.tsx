@@ -134,7 +134,7 @@ export default function AdminPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <button type="button"
               onClick={toggleTheme}
               className="p-2 rounded-lg text-zinc-500 hover:text-brand transition-colors cursor-pointer"
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -149,7 +149,7 @@ export default function AdminPage() {
                 </svg>
               )}
             </button>
-            <button
+            <button type="button"
               onClick={handleLogout}
               className="px-3 py-1.5 rounded-lg font-display text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-accent-red border border-border hover:border-accent-red/30 transition-all cursor-pointer"
             >
@@ -220,7 +220,7 @@ export default function AdminPage() {
                   </Link>
                   <div className="flex items-center gap-1 shrink-0">
                     {t.status === 'active' && (
-                      <button
+                      <button type="button"
                         onClick={() => setConfirmAction({
                           title: 'Finish Tournament?',
                           description: `Mark "${t.name}" as finished. This changes its status but does not delete any data.`,
@@ -235,7 +235,7 @@ export default function AdminPage() {
                         </svg>
                       </button>
                     )}
-                    <button
+                    <button type="button"
                       onClick={() => setConfirmAction({
                         title: 'Delete Tournament?',
                         description: `Permanently delete "${t.name}" and all its data. This cannot be undone.`,
@@ -286,7 +286,7 @@ export default function AdminPage() {
                     <span className="text-zinc-700">{l.slug}</span>
                   </div>
                 </Link>
-                <button
+                <button type="button"
                   onClick={() => setConfirmAction({
                     title: 'Delete League?',
                     description: `Permanently delete "${l.name}" and all its data. This cannot be undone.`,
