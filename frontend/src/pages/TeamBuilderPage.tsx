@@ -85,6 +85,8 @@ export default function TeamBuilderPage() {
   const [draggedPlayer, setDraggedPlayer] = useState<LeaguePlayer | null>(null)
   const [selectedPlayer, setSelectedPlayer] = useState<LeaguePlayer | null>(null)
   const [editingNote, setEditingNote] = useState<number | null>(null)  // slot_index
+  const [editingPlayerNote, setEditingPlayerNote] = useState<number | null>(null)  // player id
+  const [editPlayerNoteValue, setEditPlayerNoteValue] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['league-teams', slug],
@@ -100,6 +102,17 @@ export default function TeamBuilderPage() {
   if (data && assignment === null) {
     initFromData(data)
   }
+
+  const updatePlayerMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { locked?: boolean; tentative?: boolean; note?: string | null } }) =>
+      leagueApi.updatePlayer(slug!, id, data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['league-teams', slug] })
+      queryClient.invalidateQueries({ queryKey: ['league', slug] })
+      setEditingPlayerNote(null)
+    },
+    onError: (e: Error) => toast.error(e.message),
+  })
 
   const saveMutation = useMutation({
     mutationFn: () => leagueApi.saveTeams(slug!, compositionToSlots(assignment!, annotations), token),
@@ -419,6 +432,13 @@ export default function TeamBuilderPage() {
                             }}
                             selectedPlayerId={selectedPlayer?.id}
                             locked={isLocked}
+                            onLock={player && isAdmin ? (e) => { e.stopPropagation(); updatePlayerMutation.mutate({ id: player.id, data: { locked: !player.locked, tentative: player.locked ? player.tentative : false } }) } : undefined}
+                            onTentative={player && isAdmin ? (e) => { e.stopPropagation(); updatePlayerMutation.mutate({ id: player.id, data: { tentative: !player.tentative, locked: player.tentative ? player.locked : false } }) } : undefined}
+                            onNote={player && isAdmin ? (e) => { e.stopPropagation(); if (editingPlayerNote === player.id) { setEditingPlayerNote(null) } else { setEditingPlayerNote(player.id); setEditPlayerNoteValue(player.note || '') } } : undefined}
+                            noteEditing={editingPlayerNote === player?.id}
+                            noteValue={editingPlayerNote === player?.id ? editPlayerNoteValue : player?.note || ''}
+                            onNoteChange={setEditPlayerNoteValue}
+                            onNoteCommit={() => player && updatePlayerMutation.mutate({ id: player.id, data: { note: editPlayerNoteValue.trim() || null } })}
                           />
                         )
                       })}
@@ -452,6 +472,13 @@ export default function TeamBuilderPage() {
                           }}
                           selectedPlayerId={selectedPlayer?.id}
                           locked={false}
+                          onLock={player && isAdmin ? (e) => { e.stopPropagation(); updatePlayerMutation.mutate({ id: player.id, data: { locked: !player.locked, tentative: player.locked ? player.tentative : false } }) } : undefined}
+                          onTentative={player && isAdmin ? (e) => { e.stopPropagation(); updatePlayerMutation.mutate({ id: player.id, data: { tentative: !player.tentative, locked: player.tentative ? player.locked : false } }) } : undefined}
+                          onNote={player && isAdmin ? (e) => { e.stopPropagation(); if (editingPlayerNote === player.id) { setEditingPlayerNote(null) } else { setEditingPlayerNote(player.id); setEditPlayerNoteValue(player.note || '') } } : undefined}
+                          noteEditing={editingPlayerNote === player?.id}
+                          noteValue={editingPlayerNote === player?.id ? editPlayerNoteValue : player?.note || ''}
+                          onNoteChange={setEditPlayerNoteValue}
+                          onNoteCommit={() => player && updatePlayerMutation.mutate({ id: player.id, data: { note: editPlayerNoteValue.trim() || null } })}
                         />
                       </div>
                     </div>
