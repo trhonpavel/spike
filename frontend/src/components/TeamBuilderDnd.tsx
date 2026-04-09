@@ -36,8 +36,23 @@ export function DraggablePlayer({
       }`}
     >
       <div className="flex-1 min-w-0">
-        <p className={`font-medium text-sm truncate ${isSelected ? 'text-brand' : 'text-white'}`}>{player.name}</p>
-        <p className="font-display text-[10px] text-zinc-500 tabular-nums">{player.elo_rating.toFixed(0)} Elo</p>
+        <div className="flex items-center gap-1.5">
+          <p className={`font-medium text-sm truncate ${isSelected ? 'text-brand' : 'text-white'}`}>{player.name}</p>
+          {player.locked && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-green-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+            </svg>
+          )}
+          {player.tentative && !player.locked && (
+            <span className="font-display text-[10px] font-bold text-orange-400 border border-orange-500/30 px-1 rounded leading-4">?</span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <p className="font-display text-[10px] text-zinc-500 tabular-nums">{player.elo_rating.toFixed(0)} Elo</p>
+          {player.note && (
+            <p className="text-[10px] text-zinc-500 italic truncate max-w-[80px]">{player.note}</p>
+          )}
+        </div>
       </div>
       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-zinc-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
