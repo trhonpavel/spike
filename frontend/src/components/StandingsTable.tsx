@@ -104,7 +104,7 @@ export default function StandingsTable({ slug }: Props) {
       {/* Leaderboard */}
       <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden">
         {/* Column headers */}
-        <div className="flex items-center px-4 py-2.5 border-b border-border text-zinc-600">
+        <div className="flex items-center px-4 py-2.5 border-b border-border text-zinc-500">
           <span className="font-display text-[10px] font-bold uppercase tracking-widest w-10">#</span>
           <span className="font-display text-[10px] font-bold uppercase tracking-widest flex-1">Player</span>
           <span className="font-display text-[10px] font-bold uppercase tracking-widest w-8 text-right">W</span>
@@ -130,7 +130,7 @@ export default function StandingsTable({ slug }: Props) {
                 s.rank === 1 ? 'rank-1' :
                 s.rank === 2 ? 'rank-2' :
                 s.rank === 3 ? 'rank-3' :
-                'text-zinc-600'
+                'text-zinc-500'
               }`}>
                 {s.rank}
               </span>
@@ -150,7 +150,7 @@ export default function StandingsTable({ slug }: Props) {
 
               {/* Stats */}
               <span className="font-display text-sm font-bold text-zinc-400 w-8 text-right tabular-nums">{s.player.wins}</span>
-              <span className="text-xs text-zinc-600 w-14 text-right tabular-nums">{s.player.balls_won}/{s.player.balls_total}</span>
+              <span className="text-xs text-zinc-500 w-14 text-right tabular-nums">{s.player.balls_won}/{s.player.balls_total}</span>
               <span className={`font-display text-base font-black w-14 text-right tabular-nums ${qualifies ? 'text-qualify' : sortBy === 'elo' ? 'text-blue-400' : 'text-brand'}`}>
                 {getSortValue(s.player)}
               </span>

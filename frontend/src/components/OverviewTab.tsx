@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { Player, RoundData, Standing } from '../api/client'
 import PlayerDetailModal from './PlayerDetailModal'
+import ConfirmDialog from './ConfirmDialog'
+import { toast } from '../hooks/useToast'
 
 interface Props {
   slug: string
@@ -14,6 +16,7 @@ interface Props {
 export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) {
   const queryClient = useQueryClient()
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
+  const [finalizeTarget, setFinalizeTarget] = useState<number | null>(null)
 
   const { data: players = [] } = useQuery({
     queryKey: ['players', slug],
@@ -32,12 +35,20 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
 
   const drawMutation = useMutation({
     mutationFn: () => api.drawRound(slug, token!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rounds', slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
+      toast.success('Round drawn!')
+    },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const confirmMutation = useMutation({
     mutationFn: (roundId: number) => api.confirmRound(slug, roundId, token!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rounds', slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
+      toast.success('Round confirmed')
+    },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const finalizeMutation = useMutation({
@@ -46,7 +57,9 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
       queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
       queryClient.invalidateQueries({ queryKey: ['standings', slug] })
       queryClient.invalidateQueries({ queryKey: ['players', slug] })
+      toast.success('Round finalized — stats updated')
     },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const totalRounds = rounds.length
@@ -90,9 +103,7 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
     } else if (latestRound?.status === 'confirmed' && allScoresEntered(latestRound)) {
       adminAction = {
         label: `Finalize Round ${latestRound.round_number}`,
-        onClick: () => {
-          if (confirm('Finalize this round? Stats will update.')) finalizeMutation.mutate(latestRound.id)
-        },
+        onClick: () => setFinalizeTarget(latestRound.id),
         style: 'border border-qualify/30 text-qualify hover:bg-qualify/10',
       }
     } else if (latestRound?.status === 'confirmed' && !allScoresEntered(latestRound)) {
@@ -124,19 +135,19 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-surface-2 rounded-2xl border border-border p-4 text-center">
           <div className="score-num text-3xl text-white">{players.length}</div>
-          <div className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 mt-1">Players</div>
+          <div className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Players</div>
         </div>
         <div className="bg-surface-2 rounded-2xl border border-border p-4 text-center">
           <div className="score-num text-3xl text-white">
             {totalRounds > 0 ? `${finishedRounds}/${totalRounds}` : '—'}
           </div>
-          <div className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 mt-1">Rounds</div>
+          <div className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Rounds</div>
         </div>
         <div className="bg-surface-2 rounded-2xl border border-border p-4 text-center overflow-hidden">
           <div className="score-num text-xl text-white truncate" title={leader?.player.name}>
             {leader ? leader.player.name : '—'}
           </div>
-          <div className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600 mt-1">Leader</div>
+          <div className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Leader</div>
         </div>
       </div>
 
@@ -159,14 +170,14 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
                 )
               })()}
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-zinc-600" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-zinc-500" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
             </svg>
           </div>
           {latestRound.status !== 'finalized' && totalMatches > 0 && (
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                   {scoredMatches}/{totalMatches} matches scored
                 </span>
                 <span className="font-display text-[10px] font-bold text-zinc-500">
@@ -182,16 +193,19 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
             </div>
           )}
           {latestRound.status === 'finalized' && (
-            <span className="font-display text-xs text-zinc-600">
+            <span className="font-display text-xs text-zinc-500">
               All {totalMatches} matches completed
             </span>
           )}
         </button>
       ) : !roundsLoading ? (
-        <div className="bg-surface-2 rounded-2xl border border-border p-6 text-center">
-          <div className="score-num text-4xl text-zinc-800 mb-1">0</div>
-          <p className="font-display text-sm text-zinc-600 uppercase tracking-wider">No rounds yet</p>
-          {!admin && <p className="text-zinc-700 text-xs mt-1">Waiting for the organizer to start</p>}
+        <div className="bg-surface-2 rounded-2xl border border-border p-8 text-center space-y-2">
+          <div className="score-num text-5xl text-zinc-600 mb-1">0</div>
+          <p className="font-display text-sm text-zinc-400 uppercase tracking-wider">No rounds yet</p>
+          {admin
+            ? <p className="text-zinc-500 text-xs">Use the button below to draw round 1</p>
+            : <p className="text-zinc-500 text-xs">Waiting for the organizer to start</p>
+          }
         </div>
       ) : null}
 
@@ -211,17 +225,11 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
         </button>
       )}
 
-      {(drawMutation.isError || confirmMutation.isError || finalizeMutation.isError) && (
-        <p className="text-accent-red text-sm font-medium anim-fade">
-          {((drawMutation.error || confirmMutation.error || finalizeMutation.error) as Error)?.message}
-        </p>
-      )}
-
       {/* Top 5 mini-leaderboard */}
       {standings.length > 0 && (
         <div>
           <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden">
-            <div className="flex items-center px-4 py-2.5 border-b border-border text-zinc-600">
+            <div className="flex items-center px-4 py-2.5 border-b border-border text-zinc-500">
               <span className="font-display text-[10px] font-bold uppercase tracking-widest w-10">#</span>
               <span className="font-display text-[10px] font-bold uppercase tracking-widest flex-1">Player</span>
               <span className="font-display text-[10px] font-bold uppercase tracking-widest w-14 text-right">Pts</span>
@@ -236,7 +244,7 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
                   s.rank === 1 ? 'rank-1' :
                   s.rank === 2 ? 'rank-2' :
                   s.rank === 3 ? 'rank-3' :
-                  'text-zinc-600'
+                  'text-zinc-500'
                 }`}>
                   {s.rank}
                 </span>
@@ -255,6 +263,19 @@ export default function OverviewTab({ slug, admin, token, onSwitchTab }: Props) 
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={finalizeTarget !== null}
+        title="Finalize Round?"
+        description="This will process all scores and update player statistics. This cannot be undone."
+        confirmLabel="Finalize"
+        variant="warning"
+        onConfirm={() => {
+          if (finalizeTarget !== null) finalizeMutation.mutate(finalizeTarget)
+          setFinalizeTarget(null)
+        }}
+        onCancel={() => setFinalizeTarget(null)}
+      />
 
       {selectedPlayer && (
         <PlayerDetailModal

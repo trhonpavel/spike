@@ -10,6 +10,7 @@ import AdminPage from './pages/AdminPage'
 import TournamentsPage from './pages/TournamentsPage'
 import LeaguePage from './pages/LeaguePage'
 import PasswordGate from './components/PasswordGate'
+import ToastContainer from './components/ToastContainer'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +24,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
+      <ToastContainer />
       <PasswordGate>
         <BrowserRouter>
           <Routes>

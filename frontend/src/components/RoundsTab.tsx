@@ -6,6 +6,7 @@ import GroupCard from './GroupCard'
 import ConfirmDialog from './ConfirmDialog'
 import ManualDrawModal from './ManualDrawModal'
 import { SkeletonCard } from './Skeleton'
+import { toast } from '../hooks/useToast'
 
 interface Props {
   slug: string
@@ -42,12 +43,20 @@ export default function RoundsTab({ slug, admin, token }: Props) {
 
   const drawMutation = useMutation({
     mutationFn: () => api.drawRound(slug, token!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rounds', slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
+      toast.success('Round drawn!')
+    },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const confirmMutation = useMutation({
     mutationFn: (roundId: number) => api.confirmRound(slug, roundId, token!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rounds', slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
+      toast.success('Round confirmed')
+    },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const finalizeMutation = useMutation({
@@ -56,12 +65,18 @@ export default function RoundsTab({ slug, admin, token }: Props) {
       queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
       queryClient.invalidateQueries({ queryKey: ['standings', slug] })
       queryClient.invalidateQueries({ queryKey: ['players', slug] })
+      toast.success('Round finalized — stats updated')
     },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const deleteMutation = useMutation({
     mutationFn: (roundId: number) => api.deleteRound(slug, roundId, token!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rounds', slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
+      toast.success('Round deleted')
+    },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const unfinalizeMutation = useMutation({
@@ -70,7 +85,9 @@ export default function RoundsTab({ slug, admin, token }: Props) {
       queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
       queryClient.invalidateQueries({ queryKey: ['standings', slug] })
       queryClient.invalidateQueries({ queryKey: ['players', slug] })
+      toast.info('Round reopened')
     },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const manualDrawMutation = useMutation({
@@ -124,9 +141,6 @@ export default function RoundsTab({ slug, admin, token }: Props) {
         </div>
       )}
 
-      {drawMutation.isError && (
-        <p className="text-accent-red text-sm font-medium anim-fade">{(drawMutation.error as Error).message}</p>
-      )}
 
       {isLoading && (
         <div className="space-y-4">
@@ -153,7 +167,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
                     {st.text}
                   </span>
                   {round.status !== 'finalized' && (
-                    <span className={`font-display text-[10px] font-bold tabular-nums ${done === total ? 'text-qualify' : done > 0 ? 'text-accent-blue' : 'text-zinc-700'}`}>
+                    <span className={`font-display text-[10px] font-bold tabular-nums ${done === total ? 'text-qualify' : done > 0 ? 'text-accent-blue' : 'text-zinc-500'}`}>
                       {done}/{total}
                     </span>
                   )}
@@ -164,7 +178,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
                 <button
                   onClick={() => setDeleteTarget(round.id)}
                   disabled={deleteMutation.isPending}
-                  className="p-2 text-zinc-700 hover:text-accent-red transition-colors cursor-pointer disabled:opacity-30"
+                  className="p-2 text-zinc-500 hover:text-accent-red transition-colors cursor-pointer disabled:opacity-30"
                   aria-label={`Delete round ${round.round_number}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -177,7 +191,7 @@ export default function RoundsTab({ slug, admin, token }: Props) {
                 <button
                   onClick={() => setUnfinalizeTarget(round.id)}
                   disabled={unfinalizeMutation.isPending}
-                  className="p-2 text-zinc-700 hover:text-accent-orange transition-colors cursor-pointer disabled:opacity-30"
+                  className="p-2 text-zinc-500 hover:text-status-draft transition-colors cursor-pointer disabled:opacity-30"
                   aria-label={`Undo round ${round.round_number}`}
                   title="Undo finalization"
                 >
@@ -190,8 +204,8 @@ export default function RoundsTab({ slug, admin, token }: Props) {
 
             {/* Sitting out */}
             {round.waiting_players.length > 0 && (
-              <div className="text-xs text-zinc-600 bg-surface-3 rounded-xl px-3 py-2 border border-border">
-                <span className="text-zinc-500 font-medium">Sitting out:</span>{' '}
+              <div className="text-xs text-zinc-400 bg-surface-3 rounded-xl px-3 py-2 border border-border">
+                <span className="text-zinc-400 font-medium">Sitting out:</span>{' '}
                 {round.waiting_players.map((p) => p.name).join(', ')}
               </div>
             )}
@@ -235,10 +249,13 @@ export default function RoundsTab({ slug, admin, token }: Props) {
 
       {/* Empty */}
       {!isLoading && rounds.length === 0 && (
-        <div className="text-center py-20 space-y-2">
-          <div className="score-num text-5xl text-zinc-800">0</div>
-          <p className="font-display text-sm text-zinc-600 uppercase tracking-wider">No rounds yet</p>
-          {admin && <p className="text-zinc-700 text-sm">Draw the first round to begin</p>}
+        <div className="text-center py-16 space-y-2">
+          <div className="score-num text-5xl text-zinc-600">0</div>
+          <p className="font-display text-sm text-zinc-400 uppercase tracking-wider">No rounds yet</p>
+          {admin
+            ? <p className="text-zinc-500 text-sm">Use Auto Draw above to begin</p>
+            : <p className="text-zinc-500 text-sm">Waiting for the organizer to start</p>
+          }
         </div>
       )}
 

@@ -60,6 +60,12 @@ export default function TournamentsPage() {
     return true
   })
 
+  const tabCounts: Record<Filter, number> = {
+    all: tournaments.length + leagues.length,
+    active: tournaments.filter((t: AnyTournament) => t.status === 'active').length + leagues.filter((l: AnyLeague) => l.status === 'active').length,
+    finished: tournaments.filter((t: AnyTournament) => t.status === 'finished').length + leagues.filter((l: AnyLeague) => l.status === 'finished').length,
+  }
+
   const statusBadge = (status: string) => {
     if (status === 'finished') return { text: 'Finished', cls: 'bg-qualify/10 text-qualify border-qualify/20' }
     return { text: 'Active', cls: 'bg-accent-blue/10 text-accent-blue border-accent-blue/20' }
@@ -122,11 +128,16 @@ export default function TournamentsPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`flex-1 px-3 py-1.5 rounded-lg font-display text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+              className={`flex-1 px-3 py-1.5 rounded-lg font-display text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                 filter === f ? 'bg-brand text-black' : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
               {f}
+              {!isLoading && tabCounts[f] > 0 && (
+                <span className={`font-display text-[10px] font-black tabular-nums ${filter === f ? 'text-black/50' : 'text-zinc-600'}`}>
+                  {tabCounts[f]}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -173,7 +184,7 @@ export default function TournamentsPage() {
                         </div>
                         <div className="flex items-center gap-4 text-xs text-zinc-500">
                           {'player_count' in l && <span>{l.player_count} players</span>}
-                          <span className="text-zinc-700">{l.slug}</span>
+                          <span className="text-zinc-500">{l.slug}</span>
                         </div>
                       </Link>
                     )
@@ -211,7 +222,7 @@ export default function TournamentsPage() {
                           {'player_count' in t && <span>{t.player_count} players</span>}
                           {'round_count' in t && <span>{t.round_count} rounds</span>}
                           {'created_at' in t && t.created_at && (
-                            <span>{new Date(t.created_at).toLocaleDateString('en-US')}</span>
+                            <span>{new Date(t.created_at).toLocaleDateString('cs-CZ')}</span>
                           )}
                         </div>
                       </Link>

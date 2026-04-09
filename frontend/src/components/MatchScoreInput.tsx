@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { MatchData } from '../api/client'
 import ScoreStepper from './ScoreStepper'
+import { toast } from '../hooks/useToast'
 
 interface Props {
   match: MatchData
@@ -23,7 +24,9 @@ export default function MatchScoreInput({ match, slug, admin, token }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rounds', slug] })
       setEditing(false)
+      toast.success('Score saved')
     },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   const hasScore = match.score_team1 !== null
@@ -42,21 +45,21 @@ export default function MatchScoreInput({ match, slug, admin, token }: Props) {
         <div className="flex-1 min-w-0 space-y-1.5">
           {/* Team 1 */}
           <div className="flex items-center gap-3">
-            <span className={`score-num text-2xl w-8 text-center ${t1Won ? 'text-brand' : 'text-zinc-700'}`}>
+            <span className={`score-num text-2xl w-8 text-center ${t1Won ? 'text-brand' : 'text-zinc-500'}`}>
               {s1}
             </span>
             <div className={`h-5 w-0.5 rounded-full ${t1Won ? 'bg-brand' : 'bg-transparent'}`} />
-            <span className={`text-sm truncate ${t1Won ? 'font-semibold text-white' : 'text-zinc-600'}`}>
+            <span className={`text-sm truncate ${t1Won ? 'font-semibold text-white' : 'text-zinc-500'}`}>
               {team1}
             </span>
           </div>
           {/* Team 2 */}
           <div className="flex items-center gap-3">
-            <span className={`score-num text-2xl w-8 text-center ${t2Won ? 'text-brand' : 'text-zinc-700'}`}>
+            <span className={`score-num text-2xl w-8 text-center ${t2Won ? 'text-brand' : 'text-zinc-500'}`}>
               {s2}
             </span>
             <div className={`h-5 w-0.5 rounded-full ${t2Won ? 'bg-brand' : 'bg-transparent'}`} />
-            <span className={`text-sm truncate ${t2Won ? 'font-semibold text-white' : 'text-zinc-600'}`}>
+            <span className={`text-sm truncate ${t2Won ? 'font-semibold text-white' : 'text-zinc-500'}`}>
               {team2}
             </span>
           </div>
@@ -87,7 +90,7 @@ export default function MatchScoreInput({ match, slug, admin, token }: Props) {
             <p className="text-sm text-zinc-500 truncate">{team1}</p>
             <p className="text-sm text-zinc-500 truncate">{team2}</p>
           </div>
-          <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-700 bg-surface-4 px-2 py-1 rounded">
+          <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-500 bg-surface-4 px-2 py-1 rounded">
             TBD
           </span>
         </div>
@@ -106,7 +109,7 @@ export default function MatchScoreInput({ match, slug, admin, token }: Props) {
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
-        <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-700">vs</span>
+        <span className="font-display text-[10px] font-bold uppercase tracking-widest text-zinc-500">vs</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
@@ -139,9 +142,6 @@ export default function MatchScoreInput({ match, slug, admin, token }: Props) {
           </button>
         )}
       </div>
-      {mutation.isError && (
-        <p className="text-accent-red text-xs font-medium anim-fade">{(mutation.error as Error).message}</p>
-      )}
     </div>
   )
 }
