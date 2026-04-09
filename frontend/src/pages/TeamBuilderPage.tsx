@@ -398,7 +398,7 @@ export default function TeamBuilderPage() {
                     {editingNote === i && (
                       <div className="mb-2.5 anim-fade">
                         <input
-                          type="text"
+                          type="text" autoComplete="off"
                           value={ann.note}
                           onChange={e => setNote(i, e.target.value)}
                           placeholder="Add note..."

@@ -161,7 +161,7 @@ export default function HomePage() {
               {activeTab === 'tournament' && (
                 <form onSubmit={handleCreate} className="space-y-3" key="tournament">
                   <input
-                    type="text"
+                    type="text" autoComplete="off"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Tournament name"
@@ -188,7 +188,7 @@ export default function HomePage() {
               {activeTab === 'league' && (
                 <form onSubmit={handleCreateLeague} className="space-y-3" key="league">
                   <input
-                    type="text"
+                    type="text" autoComplete="off"
                     value={leagueName}
                     onChange={(e) => setLeagueName(e.target.value)}
                     placeholder="League name"
@@ -215,7 +215,7 @@ export default function HomePage() {
               {activeTab === 'open' && (
                 <form onSubmit={handleOpen} className="space-y-3" key="open">
                   <input
-                    type="text"
+                    type="text" autoComplete="off"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="Code or link"

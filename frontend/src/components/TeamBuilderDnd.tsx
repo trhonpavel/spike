@@ -166,7 +166,7 @@ export function DroppableSlot({
           {noteEditing && onNoteChange && onNoteCommit && (
             <div className="px-2 pb-2" onClick={e => e.stopPropagation()}>
               <input
-                type="text"
+                type="text" autoComplete="off"
                 value={noteValue}
                 onChange={e => onNoteChange(e.target.value)}
                 placeholder="Add note..."

@@ -180,7 +180,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
           <label htmlFor="add-player" className="sr-only">Player name</label>
           <input
             id="add-player"
-            type="text"
+            type="text" autoComplete="off"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Player name"
@@ -241,7 +241,7 @@ export default function PlayersTab({ slug, admin, token }: Props) {
               <div className="flex-1 min-w-0">
                 {editingId === p.id ? (
                   <input
-                    type="text"
+                    type="text" autoComplete="off"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onClick={(e) => e.stopPropagation()}

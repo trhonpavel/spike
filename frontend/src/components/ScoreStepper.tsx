@@ -20,7 +20,7 @@ export default function ScoreStepper({ value, onChange, min = 0, max = 30 }: Pro
         −
       </button>
       <input
-        type="number"
+        type="number" autoComplete="off"
         inputMode="numeric"
         value={value}
         onChange={(e) => {

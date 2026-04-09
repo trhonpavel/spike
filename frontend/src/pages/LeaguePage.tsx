@@ -223,7 +223,7 @@ export default function LeaguePage() {
               {editingPlayerId === p.id ? (
                 <div className="flex items-center gap-2">
                   <input
-                    type="text"
+                    type="text" autoComplete="off"
                     value={editPlayerName}
                     onChange={e => setEditPlayerName(e.target.value)}
                     className="flex-1 px-3 py-1.5 bg-surface-3 border border-brand/40 rounded-lg text-white text-sm focus:outline-none"
@@ -340,7 +340,7 @@ export default function LeaguePage() {
               {editingNoteId === p.id && (
                 <div className="flex gap-2 mt-1 ml-0">
                   <input
-                    type="text"
+                    type="text" autoComplete="off"
                     value={editNoteValue}
                     onChange={e => setEditNoteValue(e.target.value)}
                     placeholder="Add note..."
@@ -382,7 +382,7 @@ export default function LeaguePage() {
           {showAddPlayer ? (
             <div className="bg-surface-2 rounded-2xl border border-border p-4 space-y-3">
               <input
-                type="text"
+                type="text" autoComplete="off"
                 value={newPlayerName}
                 onChange={e => setNewPlayerName(e.target.value)}
                 placeholder="Player name"
@@ -447,7 +447,7 @@ export default function LeaguePage() {
                 Date
               </label>
               <input
-                type="date"
+                type="date" autoComplete="off"
                 value={sessionDate}
                 onChange={e => setSessionDate(e.target.value)}
                 className="w-full px-4 py-3 bg-surface-3 border border-border rounded-xl text-white focus:outline-none focus:border-brand/50 transition-all text-sm"
@@ -546,7 +546,7 @@ export default function LeaguePage() {
               </label>
               <div className="flex gap-2">
                 <input
-                  type="text"
+                  type="text" autoComplete="off"
                   value={newPlayerInput}
                   onChange={e => setNewPlayerInput(e.target.value)}
                   onKeyDown={e => {
