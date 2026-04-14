@@ -27,15 +27,31 @@ MATCH_TABLE = [
 ]
 
 
-async def get_partner_counts(db: AsyncSession, tournament_id: int) -> dict[tuple[int, int], int]:
-    """Return dict of {(min_id, max_id): games_together} from PartnerRecord."""
+async def get_partner_weights(db: AsyncSession, tournament_id: int, current_round: int) -> dict[tuple[int, int], float]:
+    """Return recency-weighted partner penalty scores.
+
+    Recent pairings are penalized heavily, older ones decay exponentially.
+    Playing together last round = 60, two rounds ago = 30, three = 15, etc.
+    After ~7 rounds the penalty is negligible (<1).
+    """
     result = await db.execute(
-        select(PartnerRecord).where(PartnerRecord.tournament_id == tournament_id)
+        select(Group, Round.round_number)
+        .join(Round, Group.round_id == Round.id)
+        .where(
+            Round.tournament_id == tournament_id,
+            Round.status == RoundStatus.finalized,
+        )
     )
-    return {
-        (r.player1_id, r.player2_id): r.games_together
-        for r in result.scalars().all()
-    }
+    weights: dict[tuple[int, int], float] = {}
+    for group, round_number in result.all():
+        ids = sorted([group.player1_id, group.player2_id, group.player3_id, group.player4_id])
+        rounds_ago = current_round - round_number
+        weight = 60.0 / (2 ** (rounds_ago - 1))
+        for i in range(4):
+            for j in range(i + 1, 4):
+                key = (ids[i], ids[j])
+                weights[key] = weights.get(key, 0.0) + weight
+    return weights
 
 
 async def get_played_games(db: AsyncSession, tournament_id: int) -> list[list[int]]:
@@ -138,10 +154,6 @@ async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
     if len(players) < 4:
         raise ValueError("Need at least 4 players")
 
-    # Get past groups and partner history
-    played_games = await get_played_games(db, tournament.id)
-    partner_counts = await get_partner_counts(db, tournament.id)
-
     # Determine round number
     rounds_result = await db.execute(
         select(Round).where(Round.tournament_id == tournament.id)
@@ -153,6 +165,10 @@ async def perform_draw(db: AsyncSession, tournament: Tournament) -> Round:
     for r in existing_rounds:
         if r.status != RoundStatus.finalized:
             raise ValueError(f"Round {r.round_number} is not finalized yet")
+
+    # Get past groups and partner history
+    played_games = await get_played_games(db, tournament.id)
+    partner_counts = await get_partner_weights(db, tournament.id, round_number)
 
     # Shuffle and determine waiting players
     random.shuffle(players)

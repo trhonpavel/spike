@@ -38,13 +38,13 @@ def sameness(game_ids: list[int], played_games: list[list[int]]) -> int:
 def rate_draw(
     groups: list[list[DrawPlayer]],
     played_games: list[list[int]],
-    partner_counts: dict[tuple[int, int], int] | None = None,
+    partner_counts: dict[tuple[int, int], float] | None = None,
 ) -> float:
     """Rate quality of a draw. Lower is better. Returns -1 if any group is a duplicate.
 
     Scoring:
     - Group-level sameness penalty: +30 for 2 repeats, +100 for 3 repeats, -1 (reject) for 4
-    - Pair-level partner history: +10 / +30 / +60 for 1 / 2 / 3+ times partnered
+    - Pair-level partner history: recency-weighted (last round=60, halves each round back)
     - Elo balance: sum of normalized squared differences (100-pt gap ≈ 1.0)
     """
     rating = 0.0
@@ -60,11 +60,5 @@ def rate_draw(
             for i in range(4):
                 for j in range(i + 1, 4):
                     key = (min(ids[i], ids[j]), max(ids[i], ids[j]))
-                    count = partner_counts.get(key, 0)
-                    if count == 1:
-                        rating += 10
-                    elif count == 2:
-                        rating += 30
-                    elif count >= 3:
-                        rating += 60
+                    rating += partner_counts.get(key, 0.0)
     return rating
